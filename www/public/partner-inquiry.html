@@ -812,7 +812,8 @@ body::after {
           <div class="field"><label>Organization</label><input type="text" id="org" placeholder="Team, university, agency, or organization" autocomplete="organization"></div>
           <div class="field"><label>Email Address</label><input type="email" id="em" placeholder="Professional email address" autocomplete="email"></div>
           <div class="field"><label>Phone (Optional)</label><input type="tel" id="ph" placeholder="Best number to reach you" autocomplete="tel"></div>
-          <div class="field"><label>How Did You Hear About ROLA?</label><input type="text" id="ref" placeholder="Referral, event, social media..."></div>
+          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label for="hp-website">Website</label><input type="text" id="hp-website" tabindex="-1" autocomplete="off"></div>
+            <div class="field"><label>How Did You Hear About ROLA?</label><input type="text" id="ref" placeholder="Referral, event, social media..."></div>
         </div>
         <div class="err-msg" id="e8">Please complete your name, organization, and email address.</div>
       </div>
@@ -1059,6 +1060,27 @@ body::after {
     S.ph = document.getElementById("ph").value.trim();
     S.ref = document.getElementById("ref").value.trim();
 
+    var nb = document.getElementById("btn-next");
+    if (nb) { nb.disabled = true; nb.textContent = "Sending"; }
+    var qs = new URLSearchParams(window.location.search);
+    var utm = ["utm_source", "utm_medium", "utm_campaign", "utm_content"].map(function(k) { return qs.get(k) ? k + "=" + qs.get(k) : ""; }).filter(Boolean).join("&");
+    fetch("/api/inquiry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: S.role, athletes: S.athletes, curr: S.curr, targ: S.targ, edu: S.edu, challenge: S.challenge, timeline: S.timeline,
+        fn: S.fn, ln: S.ln, org: S.org, em: S.em, ph: S.ph, ref: S.ref, utm: utm, website: (document.getElementById("hp-website") || {}).value || "" })
+    }).then(function(r) {
+      if (!r.ok) throw new Error("save failed");
+      showThanks();
+    }).catch(function() {
+      if (nb) { nb.disabled = false; nb.textContent = "Request a Research Partnership"; }
+      var e8 = document.getElementById("e8");
+      e8.textContent = "We could not send your request. Check your connection and try again, or email us directly.";
+      showErr(8, true);
+    });
+  }
+
+  function showThanks() {
     buildSummary();
 
     document.getElementById("screen-main").classList.remove("active");

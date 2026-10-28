@@ -85,3 +85,22 @@ with your actual Calendly URL in these files:
 Then run push.sh
 
 ─────────────────────────────────────────
+
+─────────────────────────────────────────
+
+SINCE OCTOBER 2026: NEXT.JS + ROLA OS
+
+www/ is now a Next.js app. The public site still lives as plain HTML
+in www/public/ and every old URL keeps working.
+
+  www/public/        the public website pages (edit these as before)
+  www/app/os/        ROLA OS, the team app at rolaglobal.com/os
+  www/app/api/       server routes (sign-in, OS data, inquiry form)
+  www/lib/           Airtable, sessions, roles and permissions
+
+Vercel settings that must exist (Production and Preview):
+  AIRTABLE_BASE_ID     appCmpvREM4pWbpsu  (the ROLA OS base)
+  AIRTABLE_API_KEY     Airtable token, read+write, ROLA OS base only
+  OS_SESSION_SECRET    32+ random characters (openssl rand -base64 48)
+
+push.sh still deploys everything. Vercel builds Next.js automatically.
