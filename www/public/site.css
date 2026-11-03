@@ -21,3 +21,13 @@
 .rs-legal { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid #dde2e8; }
 @media (max-width: 960px) { .rs-links a:not(.rs-btn) { display: none; } .rs-foot .rs-wrap { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { .rs-long { display: none; } .rs-short { display: inline; } .rs-brand span { font-size: 20px; } .rs-foot .rs-wrap { grid-template-columns: 1fr; } }
+
+/* Match the homepage type on every page */
+body, p, li, td, th, input, button, select, textarea, label, blockquote, figcaption { font-family: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif !important; }
+h1, h2, h3, h4 { font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif !important; font-weight: 600 !important; font-style: normal !important; letter-spacing: -0.005em; text-wrap: balance; }
+h1 em, h2 em, h3 em, h4 em, h1 i, h2 i, h3 i, h4 i { font-style: normal !important; color: inherit !important; font-family: inherit !important; }
+h1 { font-weight: 700 !important; }
+blockquote, blockquote p { font-style: normal !important; }
+.left-headline, .step-q, .ty-headline { font-family: 'Source Serif 4', Georgia, serif !important; font-weight: 600 !important; font-style: normal !important; }
+.left-headline em, .step-q em, .ty-headline em { font-style: normal !important; color: inherit !important; }
+.insight-text, .ty-sub { font-family: 'Source Sans 3', system-ui, sans-serif !important; font-style: normal !important; }
