@@ -1,22 +1,22 @@
 /* ROLA OS. Everything is scoped under .aos-root so nothing leaks into the public site. */
 .aos-root {
-  --bg: #070707;
-  --card: #111111;
-  --card2: #161616;
-  --line: #1e1e1e;
-  --line2: #2a2a2a;
-  --fg: #f4f1ea;
-  --muted: #8a8a8a;
-  --gold: #d3b579;
-  --gold-dk: #a8894a;
-  --ok: #7fbf8f;
-  --warn: #e0b45c;
-  --bad: #e07a6a;
+  --bg: #ffffff;
+  --card: #f6f7f9;
+  --card2: #eef1f4;
+  --line: #e2e6eb;
+  --line2: #cfd5dc;
+  --fg: #0b1b2b;
+  --muted: #5b6672;
+  --gold: #8a6d2f;
+  --gold-dk: #b8964f;
+  --ok: #2e7d4f;
+  --warn: #a86a00;
+  --bad: #b3261e;
   --serif: 'DM Serif Display', Georgia, 'Times New Roman', serif;
   --sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --side: 248px;
   --tabs: 64px;
-  color-scheme: dark;
+  color-scheme: light;
   min-height: 100vh;
   background: var(--bg);
   color: var(--fg);
@@ -25,7 +25,7 @@
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-body:has(.aos-root) { margin: 0; background: #070707; }
+body:has(.aos-root) { margin: 0; background: #ffffff; }
 .aos-root *, .aos-root *::before, .aos-root *::after { box-sizing: border-box; }
 .aos-root button { font: inherit; color: inherit; cursor: pointer; }
 .aos-root button:disabled { opacity: 0.5; cursor: default; }
@@ -46,8 +46,8 @@ body:has(.aos-root) { margin: 0; background: #070707; }
 .aos-lede { margin: 0; color: var(--muted); }
 .aos-error { color: var(--bad); margin: 0; font-size: 14px; }
 
-.aos-btn { background: var(--gold); color: #070707 !important; border: 0; border-radius: 2px; padding: 12px 18px; font-weight: 600; }
-.aos-btn:hover:not(:disabled) { background: #e2c88f; }
+.aos-btn { background: var(--fg); color: #ffffff !important; border: 0; border-radius: 2px; padding: 12px 18px; font-weight: 600; }
+.aos-btn:hover:not(:disabled) { background: #1c3550; }
 .aos-ghost { background: transparent; border: 1px solid var(--line2); border-radius: 2px; padding: 8px 14px; font-size: 13px; }
 .aos-ghost:hover:not(:disabled) { border-color: var(--gold-dk); }
 
@@ -65,12 +65,12 @@ body:has(.aos-root) { margin: 0; background: #070707; }
 .aos-side-link[aria-current='page'] { color: var(--fg); background: var(--card); box-shadow: inset 2px 0 0 var(--gold); }
 .aos-main { padding: 32px 40px 64px; display: grid; gap: 24px; align-content: start; min-width: 0; max-width: 1200px; }
 .aos-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.aos-banner { background: rgba(224, 180, 92, 0.1); border: 1px solid rgba(224, 180, 92, 0.35); color: var(--warn); padding: 10px 14px; font-size: 13px; }
+.aos-banner { background: #fff6e5; border: 1px solid #f0d49a; color: var(--warn); padding: 10px 14px; font-size: 13px; }
 .aos-tabs { display: none; }
 
 /* Today tiles */
-.aos-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
-.aos-tile { background: var(--bg); border: 0; text-align: left; padding: 18px 18px 20px; display: grid; gap: 6px; align-content: start; }
+.aos-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.aos-tile { background: var(--bg); border: 1px solid var(--line); border-radius: 2px; text-align: left; padding: 18px 18px 20px; display: grid; gap: 6px; align-content: start; }
 .aos-tile:hover { background: var(--card); }
 .aos-tile-label { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
 .aos-tile-value { font-family: var(--serif); font-size: 38px; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -90,9 +90,9 @@ body:has(.aos-root) { margin: 0; background: #070707; }
 .aos-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .aos-chip { background: transparent; border: 1px solid var(--line2); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
 .aos-pill { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; padding: 3px 9px; border-radius: 999px; background: var(--card2); border: 1px solid var(--line2); color: var(--muted); white-space: nowrap; }
-.aos-pill-ok { color: var(--ok); border-color: rgba(127, 191, 143, 0.35); }
-.aos-pill-warn { color: var(--warn); border-color: rgba(224, 180, 92, 0.35); }
-.aos-pill-bad { color: var(--bad); border-color: rgba(224, 122, 106, 0.4); }
+.aos-pill-ok { color: var(--ok); border-color: rgba(46, 125, 79, 0.35); }
+.aos-pill-warn { color: var(--warn); border-color: rgba(168, 106, 0, 0.35); }
+.aos-pill-bad { color: var(--bad); border-color: rgba(179, 38, 30, 0.35); }
 .aos-due { color: var(--bad); font-weight: 600; }
 
 .aos-bar { height: 4px; background: var(--line2); border-radius: 2px; overflow: hidden; }
@@ -106,7 +106,7 @@ body:has(.aos-root) { margin: 0; background: #070707; }
 .aos-count { color: var(--gold); font-variant-numeric: tabular-nums; }
 .aos-card { background: var(--card); border: 1px solid var(--line); border-radius: 2px; padding: 12px; display: grid; gap: 6px; }
 
-.aos-sheet { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: grid; align-items: end; z-index: 30; }
+.aos-sheet { position: fixed; inset: 0; background: rgba(11, 27, 43, 0.35); display: grid; align-items: end; z-index: 30; }
 .aos-sheet-body { background: var(--card); border-top: 1px solid var(--line2); padding: 12px max(16px, env(safe-area-inset-left, 0px)) calc(var(--tabs) + 12px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 4px; }
 
 @media (max-width: 860px) {
@@ -119,7 +119,7 @@ body:has(.aos-root) { margin: 0; background: #070707; }
   .aos-tile-value { font-size: 32px; }
   .aos-tabs {
     display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-    background: rgba(7, 7, 7, 0.96); border-top: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.97); border-top: 1px solid var(--line);
     padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   }
   .aos-tabs button { flex: 1; height: var(--tabs); background: none; border: 0; font-size: 12px; color: var(--muted); }

@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   description: 'The ROLA team operating system.',
   manifest: '/os/manifest.webmanifest',
   robots: { index: false, follow: false },
-  appleWebApp: { capable: true, title: 'ROLA OS', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'ROLA OS', statusBarStyle: 'default' },
   icons: { icon: '/favicon-32x32.png', apple: '/apple-touch-icon.png' },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#070707',
+  themeColor: '#ffffff',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
