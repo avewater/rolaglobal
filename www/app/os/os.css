@@ -12,8 +12,8 @@
   --ok: #2e7d4f;
   --warn: #a86a00;
   --bad: #b3261e;
-  --serif: 'DM Serif Display', Georgia, 'Times New Roman', serif;
-  --sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --sans: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --side: 248px;
   --tabs: 64px;
   color-scheme: light;
@@ -41,8 +41,8 @@ body:has(.aos-root) { margin: 0; background: #ffffff; }
 .aos-brand { font-family: var(--serif); font-size: 22px; letter-spacing: 0.04em; color: var(--fg); }
 .aos-brand span { color: var(--gold); }
 .aos-brand-lg { font-size: 34px; }
-.aos-h1 { font-family: var(--serif); font-weight: 400; font-size: 30px; margin: 0; line-height: 1.1; }
-.aos-h2 { font-family: var(--serif); font-weight: 400; font-size: 24px; margin: 0; line-height: 1.2; text-wrap: balance; }
+.aos-h1 { font-family: var(--serif); font-weight: 600; font-size: 30px; margin: 0; line-height: 1.1; }
+.aos-h2 { font-family: var(--serif); font-weight: 600; font-size: 24px; margin: 0; line-height: 1.2; text-wrap: balance; }
 .aos-lede { margin: 0; color: var(--muted); }
 .aos-error { color: var(--bad); margin: 0; font-size: 14px; }
 

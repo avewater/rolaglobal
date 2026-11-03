@@ -22,7 +22,7 @@ export default function OsLayout({ children }: { children: React.ReactNode }) {
     <>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&display=swap"
         precedence="default"
       />
       <div className="aos-root">{children}</div>
