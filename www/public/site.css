@@ -1,0 +1,23 @@
+/* Shared ROLA header and footer. Prefixed rs- so page styles never collide. */
+.rs-nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1000; background: #fff; border-bottom: 1px solid #dde2e8; font-family: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+.rs-wrap { max-width: 1240px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.rs-nav .rs-wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 72px; }
+.rs-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #0b1b2b; }
+.rs-brand img { height: 34px; width: auto; display: block; }
+.rs-brand span { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-size: 24px; letter-spacing: 0.06em; }
+.rs-links { display: flex; align-items: center; gap: 28px; font-size: 15px; }
+.rs-links a { color: #0b1b2b; text-decoration: none; }
+.rs-links a:not(.rs-btn):hover, .rs-links a[aria-current="page"] { color: #8a6d2f; }
+.rs-btn { display: inline-flex; align-items: center; padding: 10px 16px; font: 600 14px 'Source Sans 3', system-ui, sans-serif; background: #0b1b2b; color: #fff !important; text-decoration: none; }
+.rs-btn:hover { background: #1c3550; }
+.rs-short { display: none; }
+.rs-foot { background: #f4f6f8; border-top: 1px solid #dde2e8; padding-block: 48px 56px; font: 14px/1.6 'Source Sans 3', system-ui, sans-serif; color: #56616e; }
+.rs-foot .rs-wrap { display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 32px; }
+.rs-foot b { display: block; color: #0b1b2b; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+.rs-foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rs-foot a { color: #56616e; text-decoration: none; }
+.rs-foot a:hover { color: #0b1b2b; }
+.rs-foot p { margin: 16px 0 0; max-width: 36ch; }
+.rs-legal { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid #dde2e8; }
+@media (max-width: 960px) { .rs-links a:not(.rs-btn) { display: none; } .rs-foot .rs-wrap { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .rs-long { display: none; } .rs-short { display: inline; } .rs-brand span { font-size: 20px; } .rs-foot .rs-wrap { grid-template-columns: 1fr; } }
