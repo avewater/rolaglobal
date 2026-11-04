@@ -2,1150 +2,453 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ROLA | Partner Inquiry</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Request a Research Partnership | ROLA</title>
+<meta name="description" content="Request a research partnership with ROLA. Two short screens, totals only.">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&display=swap">
 <style>
+/* Layout: research-institute overview. White page, full-bleed photo hero with the mission,
+   featured research as data plates, research themes, audience paths, people, workshops, data index. */
 :root {
-  --gold:    #8a6d2f;
-  --gold-dk: #6f5724;
-  --gold-lt: #6f5724;
-  --black:   #ffffff;
-  --deep:    #f4f6f8;
-  --card:    #f6f7f9;
-  --border:  #dde2e8;
-  --border2: #cfd5dc;
-  --white:   #0b1b2b;
-  --muted:   #6b7581;
-  --slate:   #56616e;
-  --dim:     #b9c1ca;
-  --err:     #c0392b;
+  --bg: #ffffff;
+  --ink: #0b1b2b;
+  --muted: #56616e;
+  --rule: #dde2e8;
+  --soft: #f4f6f8;
+  --navy: #0b1b2b;
+  --gold: #8a6d2f;
+  --gold-lt: #d3b579;
+  --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --sans: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
 }
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.005em; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; font: 600 15px var(--sans); text-decoration: none; border: 1px solid transparent; border-radius: 0; cursor: pointer; }
+.btn-solid { background: var(--ink); color: #fff; }
+.btn-solid:hover { background: #1c3550; }
+.btn-light { background: #fff; color: var(--ink); }
+.btn-light:hover { background: #eef1f4; }
+.btn-line { border-color: rgba(255,255,255,0.6); color: #fff; }
+.btn-line:hover { background: rgba(255,255,255,0.12); }
+.more { font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 2px; }
+.more:hover { color: var(--gold); }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
+/* Nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: #fff; border-bottom: 1px solid var(--rule); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: #fff; }
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 72px; }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.brand img { height: 34px; width: auto; }
+.brand span { font-family: var(--serif); font-weight: 600; font-size: 24px; letter-spacing: 0.06em; }
+.nav-links { display: flex; align-items: center; gap: 28px; font-size: 15px; }
+.nav-links a { text-decoration: none; }
+.nav-links a:not(.btn):hover { color: var(--gold); }
+.nav-links .btn { padding: 10px 16px; font-size: 14px; }
+.nav-links .short { display: none; }
 
-body {
-  background: var(--black);
-  color: var(--white);
-  font-family: 'Source Sans 3', system-ui, sans-serif;
-  font-weight: 400;
-  min-height: 100vh;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-}
+/* Hero */
+.hero { position: relative; background: var(--navy); color: #fff; overflow: hidden; }
+.hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero::after { content: ""; position: absolute; inset: 0; background: rgba(8,20,33,0.58); }
+.hero .wrap { position: relative; z-index: 1; padding-block: 120px 112px; display: grid; gap: 24px; justify-items: center; text-align: center; }
+.hero .eyebrow { color: var(--gold-lt); }
+.hero h1 { font-size: clamp(38px, 5.2vw, 68px); font-weight: 700; line-height: 1.08; max-width: 20ch; }
+.hero p { font-size: 21px; line-height: 1.5; max-width: 60ch; margin: 0; color: rgba(255,255,255,0.9); }
+.hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 8px; }
 
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 1000;
-  opacity: 0.45;
-}
+section { padding-block: 80px; }
+.sec-head { display: grid; justify-items: center; gap: 12px; text-align: center; margin-bottom: 44px; }
+.sec-head h2 { font-family: var(--sans); font-weight: 700; font-size: 17px; letter-spacing: 0.14em; text-transform: uppercase; }
+.sec-head .more { font-size: 14px; }
 
-/* ── SCREENS ── */
-.screen {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: stretch;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.5s ease;
-  z-index: 1;
-}
-.screen.active {
-  opacity: 1;
-  pointer-events: all;
-}
+/* Featured research */
+.feature { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: center; padding-bottom: 56px; border-bottom: 1px solid var(--rule); margin-bottom: 48px; text-decoration: none; }
+.plate { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: var(--navy); color: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
+.plate::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, rgba(211,181,121,0.10) 0 2px, transparent 2px 46px); }
+.plate > * { position: relative; }
+.plate-num { font-family: var(--serif); font-size: clamp(56px, 8vw, 104px); line-height: 0.95; color: var(--gold-lt); font-variant-numeric: tabular-nums; }
+.plate-label { font-size: 15px; max-width: 34ch; color: rgba(255,255,255,0.85); margin-top: 10px; }
+.plate-sm { padding: 22px; }
+.plate-sm .plate-num { font-size: 52px; }
+.plate-sm .plate-label { font-size: 13px; }
+.kind { font-size: 13px; font-weight: 600; color: var(--gold); margin-bottom: 10px; }
+.feature h3 { font-size: clamp(28px, 3vw, 40px); line-height: 1.12; margin-bottom: 14px; }
+.feature:hover h3, .card:hover h3 { color: var(--gold); }
+.feature p, .card p { margin: 0; color: var(--muted); }
+.meta { font-size: 13px; color: var(--muted); margin-top: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 32px; }
+.card { display: grid; gap: 14px; align-content: start; text-decoration: none; min-width: 0; }
+.card h3 { font-size: 23px; line-height: 1.2; }
+.card .kind { margin: 0; }
 
-/* ── GOLD EDGE ── */
-.gold-edge {
-  width: 4px;
-  background: linear-gradient(180deg, transparent 0%, var(--gold) 20%, var(--gold) 80%, transparent 100%);
-  flex-shrink: 0;
-  opacity: 0.65;
-}
+/* Themes */
+.themes { background: var(--soft); }
+.theme-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 2px solid var(--ink); }
+.theme { padding: 24px 20px 28px 0; text-decoration: none; display: grid; gap: 10px; align-content: start; border-right: 1px solid var(--rule); padding-left: 20px; }
+.theme:first-child { padding-left: 0; }
+.theme:last-child { border-right: 0; }
+.theme b { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; }
+.theme span { font-size: 14px; color: var(--muted); }
+.theme:hover b { color: var(--gold); }
 
-/* ── LEFT PANEL ── */
-.left {
-  width: 40%;
-  min-width: 300px;
-  background: var(--deep);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 52px 52px;
-  border-right: 1px solid var(--border);
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.left::before {
-  content: '';
-  position: absolute;
-  bottom: -80px; left: -80px;
-  width: 360px; height: 360px;
-  background: radial-gradient(circle, rgba(211,181,121,0.06) 0%, transparent 65%);
-  pointer-events: none;
-}
-.left-top { display: flex; flex-direction: column; }
-.logo-wrap { margin-bottom: 48px; }
-.logo-wrap img { width: 60px; height: auto; display: block; }
-.left-eyebrow {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 14px;
-}
-.left-headline {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: clamp(28px, 2.8vw, 42px);
-  font-weight: 400;
-  line-height: 1.18;
-  color: var(--white);
-  margin-bottom: 18px;
-}
-.left-headline em { font-style: italic; color: var(--gold); }
-.left-body {
-  font-size: 12px;
-  font-weight: 300;
-  color: var(--slate);
-  line-height: 1.85;
-  max-width: 300px;
-}
+/* Audience paths */
+.paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--rule); }
+.path { padding: 32px 28px; display: grid; gap: 12px; align-content: start; border-right: 1px solid var(--rule); text-decoration: none; }
+.path:last-child { border-right: 0; }
+.path h3 { font-size: 26px; }
+.path p { margin: 0; color: var(--muted); }
+.path .more { justify-self: start; margin-top: 8px; }
+.path:hover { background: var(--soft); }
 
-/* Progress */
-.progress-section { margin-bottom: 0; }
-.prog-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.prog-label {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.prog-frac {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 13px;
-  color: var(--gold);
-}
-.prog-track {
-  height: 1px;
-  background: var(--border2);
-  position: relative;
-  margin-bottom: 14px;
-}
-.prog-fill {
-  position: absolute;
-  top: 0; left: 0; height: 100%;
-  background: linear-gradient(90deg, var(--gold-dk), var(--gold));
-  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-  width: 0%;
-}
-.prog-dots { display: flex; gap: 5px; }
-.dot { height: 2px; width: 18px; background: var(--border2); transition: all 0.35s ease; }
-.dot.done { background: var(--gold-dk); }
-.dot.active { background: var(--gold); width: 30px; }
+/* People */
+.people { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+.person { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 20px; align-items: start; }
+.mono { width: 96px; height: 96px; background: var(--soft); border: 1px solid var(--rule); display: grid; place-items: center; font-family: var(--serif); font-weight: 600; font-size: 32px; color: var(--gold); }
+.person h3 { font-size: 22px; }
+.role { font-size: 14px; font-weight: 600; margin: 4px 0 8px; }
+.person p { margin: 0; font-size: 15px; color: var(--muted); }
 
-/* Credentials */
-.creds { display: flex; flex-direction: column; }
-.cred {
-  padding: 14px 0;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-}
-.cred-num {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 24px;
-  color: var(--gold);
-  line-height: 1;
-  min-width: 68px;
-}
-.cred-label {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--muted);
-  line-height: 1.55;
-}
-.left-footer {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-top: 20px;
-}
+/* Workshops band */
+.band { background: var(--navy); color: #fff; }
+.band .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; }
+.band h2 { font-size: clamp(30px, 3.4vw, 44px); font-weight: 700; }
+.band p { color: rgba(255,255,255,0.82); margin: 16px 0 0; max-width: 54ch; }
+.band .eyebrow { color: var(--gold-lt); margin-bottom: 14px; }
+.band ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid rgba(255,255,255,0.18); }
+.band li { padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.18); display: flex; justify-content: space-between; gap: 16px; }
+.band li b { font-weight: 600; }
+.band li span { color: rgba(255,255,255,0.7); font-size: 15px; text-align: right; }
 
-/* ── RIGHT PANEL ── */
-.right {
-  flex: 1;
-  background: var(--black);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-}
-.step-area {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 52px 60px 32px;
-  scrollbar-width: none;
-}
-.step-area::-webkit-scrollbar { display: none; }
-.bottom-nav {
-  flex-shrink: 0;
-  padding: 18px 60px 26px;
-  border-top: 1px solid var(--border);
-  background: var(--black);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+/* Data index */
+.index-list { border-top: 2px solid var(--ink); }
+.idx { display: grid; grid-template-columns: 180px minmax(0, 1fr) auto; gap: 28px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--rule); }
+.idx-num { font-family: var(--sans); font-weight: 600; font-size: 34px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.idx-text { font-size: 17px; }
+.idx-src { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; color: var(--muted); text-align: right; white-space: nowrap; }
+.idx-src a { text-decoration: none; border-bottom: 1px solid var(--rule); }
 
-/* ── STEPS ── */
-.step { display: none; }
-.step.show {
-  display: block;
-  animation: stepIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards;
-}
-@keyframes stepIn {
-  from { opacity: 0; transform: translateY(22px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.step-num {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 18px;
-}
-.step-q {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: clamp(26px, 3.2vw, 42px);
-  font-weight: 400;
-  line-height: 1.14;
-  color: var(--white);
-  margin-bottom: 10px;
-  max-width: 500px;
-}
-.step-q em { font-style: italic; color: var(--gold); }
-.step-hint {
-  font-size: 12px;
-  font-weight: 300;
-  color: var(--slate);
-  line-height: 1.8;
-  margin-bottom: 36px;
-  max-width: 460px;
-}
+/* Connect */
+.connect { border-top: 1px solid var(--rule); }
+.connect .wrap { display: grid; justify-items: center; text-align: center; gap: 28px; }
+.connect h2 { font-size: clamp(28px, 3vw, 40px); font-weight: 700; max-width: 22ch; }
 
-/* ── TILE OPTIONS ── */
-.tiles { display: flex; flex-direction: column; gap: 2px; }
-.t-opt { position: relative; cursor: pointer; }
-.t-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
-.tile {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 22px;
-  border: 1px solid var(--border);
-  background: transparent;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  gap: 16px;
-}
-.tile:hover { border-color: var(--border2); background: rgba(11,27,43,0.02); }
-.t-opt input:checked + .tile {
-  border-color: var(--gold);
-  background: rgba(211,181,121,0.03);
-}
-.tile-content { flex: 1; }
-.tile-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--white);
-  margin-bottom: 3px;
-  letter-spacing: 0.1px;
-}
-.tile-desc {
-  font-size: 11px;
-  font-weight: 300;
-  color: var(--muted);
-  line-height: 1.5;
-}
-.tile-radio {
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  border: 1px solid var(--border2);
-  flex-shrink: 0;
-  position: relative;
-  transition: border-color 0.2s;
-}
-.t-opt input:checked + .tile .tile-radio { border-color: var(--gold); }
-.t-opt input:checked + .tile .tile-radio::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--gold);
-}
+footer { background: var(--soft); border-top: 1px solid var(--rule); padding-block: 48px 56px; font-size: 14px; color: var(--muted); }
+footer .wrap { display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 32px; }
+footer b { display: block; color: var(--ink); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+footer a { text-decoration: none; }
+footer a:hover { color: var(--ink); }
+.legal { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid var(--rule); }
 
-/* ── PILLS ── */
-.pills { display: flex; gap: 8px; flex-wrap: wrap; }
-.p-opt { position: relative; }
-.p-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
-.pill {
-  padding: 12px 22px;
-  border: 1px solid var(--border);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  background: transparent;
+@media (max-width: 960px) {
+  .feature, .band .wrap { grid-template-columns: 1fr; gap: 28px; }
+  .grid3, .people { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .theme-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .theme { border-right: 0; border-bottom: 1px solid var(--rule); padding-left: 0; }
+  .paths { grid-template-columns: 1fr; }
+  .path { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .path:last-child { border-bottom: 0; }
+  footer .wrap { grid-template-columns: 1fr 1fr; }
+  .nav-links a:not(.btn) { display: none; }
 }
-.pill:hover { border-color: var(--border2); color: var(--slate); }
-.p-opt input:checked + .pill {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: rgba(211,181,121,0.04);
+@media (max-width: 600px) {
+  section { padding-block: 56px; }
+  .hero .wrap { padding-block: 72px 64px; }
+  .hero p { font-size: 18px; }
+  .grid3, .people, .theme-list { grid-template-columns: 1fr; }
+  .idx { grid-template-columns: 1fr; gap: 6px; }
+  .idx-src { text-align: left; white-space: normal; }
+  .brand span { font-size: 20px; }
+  .nav-links .btn { padding: 9px 12px; font-size: 13px; }
+  .nav-links .long { display: none; }
+  .nav-links .short { display: inline; }
+  footer .wrap { grid-template-columns: 1fr; }
 }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
-/* ── CURRENCY ── */
-.curr-block { margin-bottom: 20px; }
-.curr-input-wrap {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  border-bottom: 1px solid var(--border2);
-  padding-bottom: 10px;
-  transition: border-color 0.2s;
+/* Inquiry form */
+[hidden] { display: none !important; }
+#versionQs { display: grid; gap: 36px; }
+.form-head { padding-block: 72px 32px; }
+.form-head .wrap { display: grid; justify-items: center; text-align: center; gap: 16px; }
+.form-head h1 { font-size: clamp(36px, 4.6vw, 56px); font-weight: 700; }
+.form-head p { margin: 0; max-width: 58ch; color: var(--muted); font-size: 18px; }
+.steps { display: flex; gap: 10px; justify-content: center; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.steps span[aria-current="step"] { color: var(--ink); }
+.steps span[aria-current="step"]::before { content: ""; display: inline-block; width: 8px; height: 8px; background: var(--gold); margin-right: 8px; vertical-align: 1px; }
+.form-body { padding-block: 16px 96px; }
+.card-form { max-width: 820px; margin: 0 auto; border: 1px solid var(--rule); padding: 40px; display: grid; gap: 36px; background: #fff; }
+.q { display: grid; gap: 14px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.q legend, .q > label.qt { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.25; padding: 0; margin-bottom: 4px; }
+.hint { font-size: 15px; color: var(--muted); margin: -4px 0 4px; }
+.opt { color: var(--muted); font-family: var(--sans); font-weight: 400; font-size: 15px; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill input { position: absolute; opacity: 0; pointer-events: none; }
+.pill span { display: inline-block; padding: 10px 16px; border: 1px solid var(--rule); font-size: 15px; cursor: pointer; background: #fff; transition: background .15s, border-color .15s; }
+.pill span:hover { border-color: var(--ink); }
+.pill input:checked + span { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pill input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+.grid-q { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.grow { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 16px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.grow > span { font-weight: 600; font-size: 16px; }
+.grow .pills { gap: 6px; }
+.grow .pill span { padding: 8px 12px; font-size: 14px; }
+.grid-q.off { opacity: .45; pointer-events: none; }
+.shortcut { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.shortcut input { width: 18px; height: 18px; accent-color: var(--ink); }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field.full { grid-column: 1 / -1; }
+.field label { font-size: 14px; font-weight: 600; }
+.field input, .field select { font: 16px var(--sans); color: var(--ink); background: #fff; border: 1px solid var(--cfd, #cfd5dc); padding: 12px 14px; width: 100%; border-radius: 0; }
+.field input:focus, .field select:focus { outline: 2px solid var(--gold); outline-offset: 0; border-color: var(--ink); }
+.actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--rule); padding-top: 24px; }
+.actions .back { background: none; border: 0; font: 600 15px var(--sans); color: var(--muted); cursor: pointer; padding: 0; }
+.actions .back:hover { color: var(--ink); }
+.err { color: #b3261e; font-size: 15px; margin: 0; }
+.privacy { font-size: 14px; color: var(--muted); margin: 0; }
+.notice { max-width: 820px; margin: 0 auto; border: 1px solid var(--rule); padding: 40px; text-align: center; display: grid; gap: 16px; justify-items: center; }
+.notice h2 { font-size: 30px; font-weight: 700; }
+.notice p { margin: 0; color: var(--muted); max-width: 52ch; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+@media (max-width: 700px) {
+  .card-form, .notice { padding: 24px 18px; }
+  .grow { grid-template-columns: 1fr; gap: 10px; }
+  .fields { grid-template-columns: 1fr; }
 }
-.curr-input-wrap:focus-within { border-color: var(--gold); }
-.curr-sym {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 30px;
-  color: var(--gold);
-  line-height: 1;
-  padding-bottom: 2px;
-}
-.curr-field {
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 48px;
-  font-weight: 400;
-  color: var(--white);
-  width: 100%;
-  -moz-appearance: textfield;
-}
-.curr-field::-webkit-outer-spin-button,
-.curr-field::-webkit-inner-spin-button { -webkit-appearance: none; }
-.curr-field::placeholder { color: var(--dim); }
-.quick-picks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-.qp {
-  padding: 7px 13px;
-  border: 1px solid var(--border);
-  background: transparent;
-  font-family: 'Source Sans 3', system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 1px;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.qp:hover { border-color: var(--border2); color: var(--slate); }
-.qp.on { border-color: var(--gold); color: var(--gold); background: rgba(211,181,121,0.04); }
-
-/* ── GAP CALLOUT ── */
-.gap-callout {
-  margin-top: 26px;
-  padding: 18px 22px;
-  border-left: 2px solid var(--gold);
-  background: rgba(211,181,121,0.04);
-  display: none;
-}
-.gap-callout.show { display: block; animation: stepIn 0.3s ease forwards; }
-.gap-callout-label {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 6px;
-}
-.gap-callout-num {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 34px;
-  color: var(--white);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-.gap-callout-sub { font-size: 11px; font-weight: 300; color: var(--slate); }
-
-/* ── INSIGHT ── */
-.insight {
-  margin-top: 22px;
-  padding: 15px 20px;
-  border-left: 2px solid var(--gold);
-  background: rgba(211,181,121,0.04);
-  display: none;
-}
-.insight.show { display: block; animation: stepIn 0.3s ease forwards; }
-.insight-text {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 14px;
-  font-style: italic;
-  color: var(--gold-lt);
-  line-height: 1.65;
-}
-
-/* ── TEXT FIELDS ── */
-.fields { display: flex; flex-direction: column; }
-.field {
-  border-bottom: 1px solid var(--border);
-  padding: 16px 0 12px;
-  transition: border-color 0.2s;
-}
-.field:focus-within { border-color: var(--gold); }
-.field label {
-  display: block;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 8px;
-}
-.field input {
-  background: transparent;
-  border: none;
-  outline: none;
-  width: 100%;
-  font-family: 'Source Sans 3', system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--white);
-  padding: 0;
-}
-.field input::placeholder { color: var(--dim); font-weight: 300; }
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 28px;
-}
-
-/* ── NAV BUTTONS ── */
-.btn-back {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-family: 'Source Sans 3', system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  padding: 14px 20px;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-.btn-back:hover { border-color: var(--muted); color: var(--slate); }
-.btn-next {
-  flex: 1;
-  background: var(--gold);
-  border: none;
-  color: var(--black);
-  font-family: 'Source Sans 3', system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  padding: 16px 24px;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.15s;
-}
-.btn-next:hover { background: var(--gold-lt); transform: translateY(-1px); }
-.btn-next:active { transform: translateY(0); }
-
-/* ── ERROR ── */
-.err-msg {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--err);
-  letter-spacing: 0.3px;
-  margin-top: 12px;
-  display: none;
-}
-.err-msg.show { display: block; animation: stepIn 0.2s ease forwards; }
-@keyframes shake {
-  0%,100% { transform: translateX(0); }
-  25%,75%  { transform: translateX(-6px); }
-  50%      { transform: translateX(6px); }
-}
-.shake { animation: shake 0.28s ease; }
-
-/* ── THANK YOU ── */
-#screen-ty .right {
-  overflow-y: auto;
-  padding: 56px 60px;
-  justify-content: flex-start;
-  display: flex;
-  flex-direction: column;
-}
-.ty-eyebrow {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 18px;
-}
-.ty-headline {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: clamp(42px, 5vw, 68px);
-  font-weight: 400;
-  line-height: 1.05;
-  color: var(--white);
-  margin-bottom: 8px;
-}
-.ty-sub {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 20px;
-  font-style: italic;
-  color: var(--gold);
-  margin-bottom: 26px;
-}
-.ty-body {
-  font-size: 12px;
-  font-weight: 300;
-  color: var(--slate);
-  line-height: 1.85;
-  max-width: 400px;
-  margin-bottom: 36px;
-}
-.ty-summary {
-  border: 1px solid var(--border);
-  border-top: 2px solid var(--gold);
-  max-width: 440px;
-  margin-bottom: 28px;
-}
-.ty-head {
-  padding: 13px 22px;
-  border-bottom: 1px solid var(--border);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.ty-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 11px 22px;
-  border-bottom: 1px solid var(--border);
-  gap: 16px;
-}
-.ty-row:last-child { border-bottom: none; }
-.ty-k {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted);
-  white-space: nowrap;
-}
-.ty-v {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 14px;
-  color: var(--white);
-  text-align: right;
-}
-.ty-note {
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-  max-width: 380px;
-}
-
-/* ── LOADING ── */
-#screen-load {
-  position: fixed;
-  inset: 0;
-  background: var(--black);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 900;
-  transition: opacity 0.4s ease;
-}
-#screen-load img { width: 52px; opacity: 0.9; }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 860px) {
-  .left { display: none; }
-  .gold-edge { display: none; }
-  .right { width: 100%; }
-  .step-area { padding: 40px 24px 24px; }
-  .bottom-nav { padding: 14px 24px 22px; }
-  #screen-ty .right { padding: 40px 24px; }
-  .field-row { grid-template-columns: 1fr; gap: 0; }
-}
-
-/* cohesive restyle */
-h1,h2,h3,h4 { font-weight: 600; }
-body { -webkit-font-smoothing: antialiased; }
 </style>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap">
-<link rel="stylesheet" href="/site.css">
 </head>
 <body>
 
-<!-- Loading -->
-<div id="screen-load">
-  <img src="/images/rola-mark.png" alt="ROLA">
-</div>
-
-<!-- ══ MAIN SCREEN ══ -->
-<div class="screen active" id="screen-main">
-  <div class="gold-edge"></div>
-
-  <!-- LEFT -->
-  <div class="left">
-    <div class="left-top">
-      <div class="logo-wrap"><img src="/images/rola-mark.png" alt="ROLA"></div>
-      <div class="left-eyebrow">Partner Inquiry</div>
-      <div class="left-headline">Request a<br><em>Research Partnership.</em></div>
-      <div class="left-body">ROLA partners with the institutions that develop, manage, and represent athletes. Complete this inquiry and we will return a tailored recommendation within 48 hours.</div>
-    </div>
-    <div>
-      <div class="progress-section" style="margin-bottom:28px;">
-        <div class="prog-meta">
-          <span class="prog-label" id="prog-label">Your Profile</span>
-          <span class="prog-frac" id="prog-frac">1 / 8</span>
-        </div>
-        <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
-        <div class="prog-dots" id="prog-dots"></div>
-      </div>
-      <div class="creds">
-        <div class="cred"><div class="cred-num">500+</div><div class="cred-label">Sales &amp; Marketing<br>Reps Trained</div></div>
-        <div class="cred"><div class="cred-num">$50M+</div><div class="cred-label">Capital Raised<br>Client Portfolio</div></div>
-        <div class="cred"><div class="cred-num">72 hrs</div><div class="cred-label">Average GTM<br>Activation Time</div></div>
-      </div>
-      <div class="left-footer" style="margin-top:18px;">rolaglobal.com &nbsp;&middot;&nbsp; Confidential</div>
-    </div>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="ROLA home"><img src="/images/rola-mark.png" alt=""><span>ROLA</span></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="/rola-report">The ROLA Report</a>
+      <a href="/what-we-build">What We Build</a>
+      <a href="/about">About</a>
+      <a class="btn btn-solid" href="/partner-inquiry"><span class="long">Request a Research Partnership</span><span class="short">Partner with us</span></a>
+    </nav>
   </div>
+</header>
 
-  <!-- RIGHT -->
-  <div class="right">
-    <div class="step-area" id="step-area">
+<main>
+  <section class="form-head" aria-labelledby="f-title">
+    <div class="wrap">
+      <h1 id="f-title">Request a Research Partnership</h1>
+      <p>Two short screens, about 90 seconds. We ask for totals only, never names or individual figures. Your answers are used for your private briefing and are not published.</p>
+      <div class="steps" id="steps" aria-label="Progress"><span id="st1" aria-current="step">1 · Snapshot</span><span>/</span><span id="st2">2 · Contact</span></div>
+    </div>
+  </section>
 
-      <!-- S1 -->
-      <div class="step show" id="s1">
-        <div class="step-num">01 of 08 &nbsp; Your Profile</div>
-        <div class="step-q">Who are you<br>representing?</div>
-        <div class="step-hint">Select the option that best describes your role within the athlete ecosystem.</div>
-        <div class="tiles">
-          <label class="t-opt"><input type="radio" name="role" value="athletic_dept">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Athletic Department / NIL Collective</div><div class="tile-desc">University, college, or collective managing NIL for student-athletes</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="role" value="agent">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Sports Agent / Player Manager</div><div class="tile-desc">Representing professional or collegiate athletes across any sport</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="role" value="pro_org">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Professional Sports Organization</div><div class="tile-desc">Team, league, or front office managing player development programs</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="role" value="other">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Other</div><div class="tile-desc">Brand, sponsor, media company, or athlete inquiring directly</div></div><div class="tile-radio"></div></div></label>
+  <section class="form-body">
+    <div class="wrap">
+      <form class="card-form" id="screen1" novalidate>
+        <fieldset class="q">
+          <legend>I am a...</legend>
+          <div class="pills" id="orgPills"></div>
+        </fieldset>
+        <div id="versionQs"></div>
+        <p class="err" id="err1" role="alert" hidden></p>
+        <div class="actions" id="act1" hidden>
+          <p class="privacy">Totals only. Nothing you share here is published.</p>
+          <button class="btn btn-solid" type="submit" id="next1">Continue</button>
         </div>
-        <div class="insight" id="ins1"><div class="insight-text" id="ins1t"></div></div>
-        <div class="err-msg" id="e1">Please select your role to continue.</div>
+      </form>
+
+      <div class="notice" id="athleteNote" hidden>
+        <h2>This form is for institutions.</h2>
+        <p>Athletes can take the free assessment and join a workshop at philanthropyforathletes.org.</p>
+        <a class="btn btn-solid" href="https://philanthropyforathletes.org" rel="noopener">Go to the athlete assessment</a>
       </div>
 
-      <!-- S2 -->
-      <div class="step" id="s2">
-        <div class="step-num">02 of 08 &nbsp; Roster Size</div>
-        <div class="step-q">How many athletes are<br>in your program?</div>
-        <div class="step-hint">Include all athletes you actively work with, regardless of sport or level.</div>
-        <div class="pills">
-          <label class="p-opt"><input type="radio" name="athletes" value="1-10"><div class="pill">1&ndash;10</div></label>
-          <label class="p-opt"><input type="radio" name="athletes" value="10-25"><div class="pill">10&ndash;25</div></label>
-          <label class="p-opt"><input type="radio" name="athletes" value="25-50"><div class="pill">25&ndash;50</div></label>
-          <label class="p-opt"><input type="radio" name="athletes" value="50-100"><div class="pill">50&ndash;100</div></label>
-          <label class="p-opt"><input type="radio" name="athletes" value="100+"><div class="pill">100+</div></label>
-        </div>
-        <div class="err-msg" id="e2">Please select a range to continue.</div>
-      </div>
-
-      <!-- S3 -->
-      <div class="step" id="s3">
-        <div class="step-num">03 of 08 &nbsp; Current Revenue</div>
-        <div class="step-q">Current annual<br>NIL revenue.</div>
-        <div class="step-hint">Total NIL compensation across your program. Enter zero if not yet active.</div>
-        <div class="curr-block">
-          <div class="curr-input-wrap">
-            <span class="curr-sym">$</span>
-            <input type="number" class="curr-field" id="curr-arr" placeholder="0" min="0">
-          </div>
-          <div class="quick-picks">
-            <button class="qp" type="button" onclick="setQP('curr-arr',0,this)">Not started</button>
-            <button class="qp" type="button" onclick="setQP('curr-arr',50000,this)">$50K</button>
-            <button class="qp" type="button" onclick="setQP('curr-arr',150000,this)">$150K</button>
-            <button class="qp" type="button" onclick="setQP('curr-arr',500000,this)">$500K</button>
-            <button class="qp" type="button" onclick="setQP('curr-arr',1000000,this)">$1M+</button>
-          </div>
-        </div>
-        <div class="err-msg" id="e3">Please enter a current NIL figure to continue.</div>
-      </div>
-
-      <!-- S4 -->
-      <div class="step" id="s4">
-        <div class="step-num">04 of 08 &nbsp; Revenue Target</div>
-        <div class="step-q">Target NIL revenue<br>in 12 months.</div>
-        <div class="step-hint">Be ambitious. This defines the gap ROLA is being asked to close.</div>
-        <div class="curr-block">
-          <div class="curr-input-wrap">
-            <span class="curr-sym">$</span>
-            <input type="number" class="curr-field" id="targ-arr" placeholder="0" min="0" oninput="calcGap()">
-          </div>
-          <div class="quick-picks">
-            <button class="qp" type="button" onclick="setQP('targ-arr',100000,this)">$100K</button>
-            <button class="qp" type="button" onclick="setQP('targ-arr',500000,this)">$500K</button>
-            <button class="qp" type="button" onclick="setQP('targ-arr',1000000,this)">$1M</button>
-            <button class="qp" type="button" onclick="setQP('targ-arr',2500000,this)">$2.5M</button>
-            <button class="qp" type="button" onclick="setQP('targ-arr',5000000,this)">$5M+</button>
-          </div>
-        </div>
-        <div class="gap-callout" id="gap-box">
-          <div class="gap-callout-label">Revenue Gap to Close</div>
-          <div class="gap-callout-num" id="gap-num"></div>
-          <div class="gap-callout-sub">This is the number ROLA is built to capture for your program.</div>
-        </div>
-        <div class="err-msg" id="e4">Please enter a target figure to continue.</div>
-      </div>
-
-      <!-- S5 -->
-      <div class="step" id="s5">
-        <div class="step-num">05 of 08 &nbsp; Business Education</div>
-        <div class="step-q">NIL business education<br>for your athletes.</div>
-        <div class="step-hint">Does your program offer structured education in financial literacy, brand development, or entity structuring?</div>
-        <div class="tiles">
-          <label class="t-opt"><input type="radio" name="edu" value="formal">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Yes, Formal Program</div><div class="tile-desc">Structured curriculum already deployed across the program</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="edu" value="informal">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Yes, Informally</div><div class="tile-desc">Some guidance offered but no systematic program in place</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="edu" value="building">
-            <div class="tile"><div class="tile-content"><div class="tile-name">No, Actively Building</div><div class="tile-desc">Evaluating options and looking for the right partner now</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="edu" value="none">
-            <div class="tile"><div class="tile-content"><div class="tile-name">No, Not Yet</div><div class="tile-desc">This has not been addressed within the program</div></div><div class="tile-radio"></div></div></label>
-        </div>
-        <div class="insight" id="ins5"><div class="insight-text" id="ins5t"></div></div>
-        <div class="err-msg" id="e5">Please select an option to continue.</div>
-      </div>
-
-      <!-- S6 -->
-      <div class="step" id="s6">
-        <div class="step-num">06 of 08 &nbsp; Primary Challenge</div>
-        <div class="step-q">Your single biggest<br>challenge right now.</div>
-        <div class="step-hint">This directly shapes the recommendation we build for your program.</div>
-        <div class="tiles">
-          <label class="t-opt"><input type="radio" name="challenge" value="deal_flow">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Insufficient Brand Deal Pipeline</div><div class="tile-desc">Not enough opportunities reaching athletes at the right volume or quality</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="challenge" value="readiness">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Athlete Business Readiness</div><div class="tile-desc">Athletes lack the infrastructure to capitalize on deals that exist</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="challenge" value="compliance">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Compliance and Risk Management</div><div class="tile-desc">Navigating NCAA or CSC rules while maximizing athlete earning potential</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="challenge" value="recruiting">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Recruiting and Retention Differentiation</div><div class="tile-desc">Need a credible NIL program story to attract and retain elite athletes</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="challenge" value="systems">
-            <div class="tile"><div class="tile-content"><div class="tile-name">No Scalable Systems or Infrastructure</div><div class="tile-desc">Managing everything athlete by athlete with no repeatable process</div></div><div class="tile-radio"></div></div></label>
-        </div>
-        <div class="err-msg" id="e6">Please select your primary challenge.</div>
-      </div>
-
-      <!-- S7 -->
-      <div class="step" id="s7">
-        <div class="step-num">07 of 08 &nbsp; Timeline</div>
-        <div class="step-q">How urgently do<br>you need to move?</div>
-        <div class="step-hint">This determines how our team prioritizes your inquiry.</div>
-        <div class="tiles">
-          <label class="t-opt"><input type="radio" name="timeline" value="now">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Immediately</div><div class="tile-desc">Active recruiting cycle or program build underway right now</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="timeline" value="quarter">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Within the Next 90 Days</div><div class="tile-desc">Planning ahead to be operational before the next season or cycle</div></div><div class="tile-radio"></div></div></label>
-          <label class="t-opt"><input type="radio" name="timeline" value="exploring">
-            <div class="tile"><div class="tile-content"><div class="tile-name">Exploring Options</div><div class="tile-desc">Gathering information to inform a future decision</div></div><div class="tile-radio"></div></div></label>
-        </div>
-        <div class="err-msg" id="e7">Please select a timeline.</div>
-      </div>
-
-      <!-- S8 -->
-      <div class="step" id="s8">
-        <div class="step-num">08 of 08 &nbsp; Contact Details</div>
-        <div class="step-q">Let us get<br>connected.</div>
-        <div class="step-hint">Our team will review your profile and return a tailored recommendation with a calendar link within 48 hours.</div>
+      <form class="card-form" id="screen2" novalidate hidden>
         <div class="fields">
-          <div class="field-row">
-            <div class="field"><label>First Name</label><input type="text" id="fn" placeholder="First name" autocomplete="given-name"></div>
-            <div class="field"><label>Last Name</label><input type="text" id="ln" placeholder="Last name" autocomplete="family-name"></div>
-          </div>
-          <div class="field"><label>Organization</label><input type="text" id="org" placeholder="Team, university, agency, or organization" autocomplete="organization"></div>
-          <div class="field"><label>Email Address</label><input type="email" id="em" placeholder="Professional email address" autocomplete="email"></div>
-          <div class="field"><label>Phone (Optional)</label><input type="tel" id="ph" placeholder="Best number to reach you" autocomplete="tel"></div>
-          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label for="hp-website">Website</label><input type="text" id="hp-website" tabindex="-1" autocomplete="off"></div>
-            <div class="field"><label>How Did You Hear About ROLA?</label><input type="text" id="ref" placeholder="Referral, event, social media..."></div>
+          <div class="field full"><label for="name">Full name</label><input id="name" autocomplete="name" required></div>
+          <div class="field"><label for="role">Role</label><select id="role"></select></div>
+          <div class="field"><label for="organization" id="orgLabel">Institution</label><input id="organization" autocomplete="organization" required></div>
+          <div class="field"><label for="email">Work email</label><input id="email" type="email" autocomplete="email" required></div>
+          <div class="field"><label for="phone">Phone <span class="opt">(optional)</span></label><input id="phone" type="tel" autocomplete="tel"></div>
+          <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" tabindex="-1" autocomplete="off"></div>
         </div>
-        <div class="err-msg" id="e8">Please complete your name, organization, and email address.</div>
+        <p class="err" id="err2" role="alert" hidden></p>
+        <div class="actions">
+          <button class="back" type="button" id="back2">Back</button>
+          <button class="btn btn-solid" type="submit" id="next2">Get my private briefing</button>
+        </div>
+      </form>
+
+      <div class="notice" id="done" hidden>
+        <h2>Thank you.</h2>
+        <p>We will send a private briefing on your program within 5 business days.</p>
+        <a class="btn btn-solid" href="/rola-report">Read The ROLA Report</a>
       </div>
-
-    </div><!-- /step-area -->
-
-    <div class="bottom-nav" id="bottom-nav">
-      <button class="btn-back" id="btn-back" type="button" onclick="goBack()" style="display:none;">Back</button>
-      <button class="btn-next" id="btn-next" type="button" onclick="goNext()">Continue</button>
     </div>
-  </div>
-</div><!-- /screen-main -->
+  </section>
+</main>
 
-
-<!-- ══ THANK YOU SCREEN ══ -->
-<div class="screen" id="screen-ty">
-  <div class="gold-edge"></div>
-  <div class="left">
-    <div class="left-top">
-      <div class="logo-wrap"><img src="/images/rola-mark.png" alt="ROLA"></div>
-      <div class="left-eyebrow">Inquiry Received</div>
-      <div class="left-headline">Your session<br>has been<br><em>requested.</em></div>
-      <div class="left-body">Our team will reach out within 48 hours with a tailored recommendation and a calendar link to confirm your partnership conversation.</div>
-    </div>
+<footer>
+  <div class="wrap">
     <div>
-      <div class="progress-section" style="margin-bottom:28px;">
-        <div class="prog-meta">
-          <span class="prog-label">Complete</span>
-          <span class="prog-frac" style="color:var(--gold);">8 / 8</span>
-        </div>
-        <div class="prog-track"><div class="prog-fill" style="width:100%"></div></div>
-        <div class="prog-dots" id="ty-dots"></div>
-      </div>
-      <div class="creds">
-        <div class="cred"><div class="cred-num">48 hrs</div><div class="cred-label">Response<br>Guarantee</div></div>
-        <div class="cred"><div class="cred-num">100%</div><div class="cred-label">Tailored<br>Recommendation</div></div>
-      </div>
-      <div class="left-footer" style="margin-top:18px;">rolaglobal.com &nbsp;&middot;&nbsp; Confidential</div>
+      <a class="brand" href="/" aria-label="ROLA home"><img src="/images/rola-mark.png" alt=""><span style="color:var(--ink)">ROLA</span></a>
+      <p style="margin:16px 0 0;max-width:36ch">Revolutionizing Opportunities and Leadership for Athletes.</p>
     </div>
+    <div><b>Research</b><ul><li><a href="/rola-report">The ROLA Report</a></li><li><a href="/nil-infrastructure">NIL Infrastructure</a></li><li><a href="/financial-literacy">Athlete Taxes</a></li></ul></div>
+    <div><b>Company</b><ul><li><a href="/about">About</a></li><li><a href="/what-we-build">What We Build</a></li><li><a href="/partner-inquiry">Research Partnership</a></li></ul></div>
+    <div><b>Elsewhere</b><ul><li><a href="https://nameimagelikeness.org" rel="noopener">nameimagelikeness.org</a></li><li><a href="https://philanthropyforathletes.org" rel="noopener">Philanthropy for Athletes</a></li></ul></div>
+    <div class="legal">© 2026 ROLA · rolaglobal.com</div>
   </div>
-  <div class="right" style="overflow-y:auto; padding:52px 60px; display:flex; flex-direction:column; justify-content:flex-start;">
-    <div class="ty-eyebrow">Partner Inquiry Confirmed</div>
-    <div class="ty-headline">Session<br>Requested.</div>
-    <div class="ty-sub">We will be in touch within 48 hours.</div>
-    <p class="ty-body">Our team will review your program profile and return a tailored recommendation alongside a calendar link to confirm your partnership conversation with ROLA.</p>
-    <div class="ty-summary"><div class="ty-head">Submission Summary</div><div id="ty-rows"></div></div>
-    <div class="ty-note">ROLA &nbsp;&middot;&nbsp; Athlete Division &nbsp;&middot;&nbsp; rolaglobal.com</div>
-  </div>
-</div>
-
+</footer>
 
 <script>
-(function() {
-  "use strict";
-
-  var S = {};
-  var TOTAL = 8;
-  var cur = 1;
-
-  var STEP_LABELS = [
-    "Your Profile", "Roster Size", "Current Revenue", "Revenue Target",
-    "Business Education", "Primary Challenge", "Timeline", "Contact Details"
-  ];
-
-  var ROLE_INS = {
-    "athletic_dept": "Athletic departments represent our highest-priority institutional partner tier. Our program is built specifically for NIL collective and compliance-integrated delivery across full rosters.",
-    "agent": "Sports agents are ROLA ideal co-pilots. You close the representation deals we build the business infrastructure behind your clients. Multiple partnership structures are available.",
-    "pro_org": "Professional organizations represent the frontier of athlete business development. Post-career outcomes, player retention, and off-field brand architecture are all areas where ROLA delivers measurable results.",
-    "other": "We work with a wide range of stakeholders across the athlete ecosystem. Share your context in the session and we will find the right structure."
-  };
-
-  var EDU_INS = {
-    "formal": "A formal program is a strong foundation. ROLA layers in GTM activation, IP structuring, and revenue system architecture the components most programs have not yet productized.",
-    "informal": "Informal guidance is a start. ROLA systematizes the entire approach so every athlete receives the same standard of business support, not just the ones who ask.",
-    "building": "Perfect timing. We can build something from the ground up that becomes a genuine competitive differentiator in every recruiting conversation.",
-    "none": "Programs that build this infrastructure now establish a compounding advantage over every program that waits. You are not behind, you are early."
-  };
-
-  function renderDots(containerId) {
-    var c = document.getElementById(containerId);
-    if (!c) return;
-    c.innerHTML = "";
-    for (var i = 1; i <= TOTAL; i++) {
-      var d = document.createElement("div");
-      var cls = "dot";
-      if (i < cur) cls += " done";
-      else if (i === cur) cls += " active";
-      d.className = cls;
-      c.appendChild(d);
-    }
-  }
-
-  function updateProgress() {
-    var pct = ((cur - 1) / TOTAL) * 100;
-    document.getElementById("prog-fill").style.width = pct + "%";
-    document.getElementById("prog-label").textContent = STEP_LABELS[cur - 1] || "Complete";
-    document.getElementById("prog-frac").textContent = cur + " / " + TOTAL;
-    renderDots("prog-dots");
-    var backBtn = document.getElementById("btn-back");
-    var nextBtn = document.getElementById("btn-next");
-    backBtn.style.display = cur > 1 ? "block" : "none";
-    if (cur === TOTAL) {
-      nextBtn.textContent = "Request a Research Partnership";
-      nextBtn.style.letterSpacing = "2px";
-    } else {
-      nextBtn.textContent = "Continue";
-      nextBtn.style.letterSpacing = "3px";
-    }
-  }
-
-  function showStep(n) {
-    var steps = document.querySelectorAll(".step");
-    for (var i = 0; i < steps.length; i++) {
-      steps[i].classList.remove("show");
-    }
-    var el = document.getElementById("s" + n);
-    if (el) el.classList.add("show");
-    var area = document.getElementById("step-area");
-    if (area) area.scrollTop = 0;
-    updateProgress();
-  }
-
-  function rv(name) {
-    var el = document.querySelector("input[name='" + name + "']:checked");
-    return el ? el.value : null;
-  }
-
-  function showIns(id, text) {
-    var wrap = document.getElementById("ins" + id);
-    var txt = document.getElementById("ins" + id + "t");
-    if (wrap && txt && text) {
-      txt.textContent = text;
-      wrap.classList.add("show");
-    }
-  }
-
-  function showErr(id, visible) {
-    var el = document.getElementById("e" + id);
-    if (el) {
-      if (visible) el.classList.add("show");
-      else el.classList.remove("show");
-    }
-  }
-
-  function shakeStep() {
-    var el = document.getElementById("s" + cur);
-    if (!el) return;
-    el.classList.remove("shake");
-    void el.offsetWidth;
-    el.classList.add("shake");
-  }
-
-  window.goNext = function() {
-    if (cur === 1) {
-      var v = rv("role");
-      if (!v) { showErr(1, true); shakeStep(); return; }
-      S.role = v; showErr(1, false);
-      showIns(1, ROLE_INS[v] || "");
-    }
-    if (cur === 2) {
-      var v = rv("athletes");
-      if (!v) { showErr(2, true); shakeStep(); return; }
-      S.athletes = v; showErr(2, false);
-    }
-    if (cur === 3) {
-      var v = document.getElementById("curr-arr").value;
-      if (v === "" || v === null) { showErr(3, true); shakeStep(); return; }
-      S.curr = parseFloat(v) || 0; showErr(3, false);
-    }
-    if (cur === 4) {
-      var v = document.getElementById("targ-arr").value;
-      if (!v) { showErr(4, true); shakeStep(); return; }
-      S.targ = parseFloat(v) || 0; showErr(4, false);
-    }
-    if (cur === 5) {
-      var v = rv("edu");
-      if (!v) { showErr(5, true); shakeStep(); return; }
-      S.edu = v; showErr(5, false);
-      showIns(5, EDU_INS[v] || "");
-    }
-    if (cur === 6) {
-      var v = rv("challenge");
-      if (!v) { showErr(6, true); shakeStep(); return; }
-      S.challenge = v; showErr(6, false);
-    }
-    if (cur === 7) {
-      var v = rv("timeline");
-      if (!v) { showErr(7, true); shakeStep(); return; }
-      S.timeline = v; showErr(7, false);
-    }
-    if (cur === 8) {
-      submitForm();
-      return;
-    }
-    cur++;
-    showStep(cur);
-  };
-
-  window.goBack = function() {
-    if (cur > 1) {
-      cur--;
-      showStep(cur);
+(function () {
+  var COUNT = ['0', '1 to 5', '6 to 20', '21 to 50', '50+', 'Not sure'];
+  var STRUCT = ['None', 'Some', 'Most', "Don't track"];
+  var TOTAL = ['Under $250K', '$250K to $1M', '$1M to $5M', '$5M+', 'Not sure'];
+  var BANDS = ['nil_band1_count', 'nil_band2_count', 'nil_band3_count'];
+  var SKEYS = ['struct_llc', 'struct_nonprofit', 'struct_trust', 'struct_life_ins', 'struct_cpa'];
+  var V = {
+    'Athletic department': {
+      roster: { q: 'About how many athletes are on your roster?', opts: ['Under 100', '100 to 300', '300 to 600', '600+'] },
+      bands: { q: 'About how many of your athletes earn income from NIL each year?', hint: 'Count third-party NIL deals only. Do not include school revenue-share payments. The rows overlap: an athlete earning $100K or more counts in all three.', rows: ['$5K or more', '$25K or more', '$100K or more'] },
+      struct: { q: 'Of your athletes earning $5K or more, how many have each of the following?', rows: ['An LLC or other business entity', 'A nonprofit or foundation', 'A trust', 'A life insurance policy', 'A CPA or tax advisor'] },
+      extra: [{ key: 'total_nil_band', q: 'Total third-party NIL earned across your roster this year', opts: TOTAL, optional: true },
+              { key: 'rev_share', q: 'Does your department pay revenue share to athletes?', opts: ['Yes', 'Not yet', 'Prefer not to say'], optional: true }],
+      roles: ['Athletic director', 'Associate or assistant AD', 'NIL director', 'Compliance', 'Development or fundraising', 'Student-athlete development', 'Other'],
+      orgLabel: 'Institution'
+    },
+    'Collective or agency': {
+      pre: [{ key: 'org_subtype', q: 'What best describes you?', opts: ['NIL collective', 'Athlete agency', 'Other'] }],
+      roster: { q: 'About how many athletes do you represent or work with?', opts: ['Under 25', '25 to 100', '100 to 300', '300+'] },
+      bands: { q: 'About how many of those athletes earn income from NIL each year?', hint: 'The rows overlap: an athlete earning $100K or more counts in all three.', rows: ['$5K or more', '$25K or more', '$100K or more'] },
+      struct: { q: 'Of the athletes you work with who earn $5K or more, how many have each of the following?', rows: ['An LLC or other business entity', 'A nonprofit or foundation', 'A trust', 'A life insurance policy', 'A CPA or tax advisor'] },
+      extra: [{ key: 'total_nil_band', q: 'Total NIL income across these athletes this year', opts: TOTAL, optional: true }],
+      roles: ['Founder or owner', 'Executive director', 'Agent', 'Partnerships', 'Other'],
+      orgLabel: 'Organization'
+    },
+    'Professional organization': {
+      roster: { q: 'About how many players are on your roster, including affiliate teams?', opts: ['Under 15', '15 to 50', '50 to 150', '150+'] },
+      bands: { q: 'About how many of your players earn income outside their playing contracts each year?', hint: 'Count endorsements, appearances and business income. Do not count playing contracts. The rows overlap.', rows: ['$100K or more', '$1M or more', '$5M or more'] },
+      struct: { q: 'Of your players earning $100K or more outside their contracts, how many have each of the following?', rows: ['An LLC or other business entity', 'A foundation or nonprofit', 'A trust', 'A life insurance policy', 'A wealth manager or CPA'] },
+      extra: [{ key: 'biz_education', q: 'Does your organization currently offer player business education?', opts: ['Yes', 'Not yet', 'Exploring'], optional: true }],
+      roles: ['Partnerships', 'Player development', 'Community or foundation', 'Executive leadership', 'Other'],
+      orgLabel: 'Organization'
     }
   };
-
-  window.setQP = function(id, val, btn) {
-    document.getElementById(id).value = val;
-    var picks = btn.closest(".quick-picks");
-    if (picks) {
-      var btns = picks.querySelectorAll(".qp");
-      for (var i = 0; i < btns.length; i++) btns[i].classList.remove("on");
-    }
-    btn.classList.add("on");
-    if (id === "targ-arr") calcGap();
-  };
-
-  window.calcGap = function() {
-    var t = parseFloat(document.getElementById("targ-arr").value) || 0;
-    var c = S.curr || 0;
-    var gap = t - c;
-    var box = document.getElementById("gap-box");
-    if (t > 0) {
-      document.getElementById("gap-num").textContent = fmt(gap > 0 ? gap : t);
-      box.classList.add("show");
-    }
-  };
-
-  function fmt(n) {
-    if (n >= 1000000) return "$" + (n / 1000000).toFixed(1) + "M";
-    if (n >= 1000) return "$" + Math.round(n / 1000) + "K";
-    return "$" + n.toLocaleString();
+  var ORGS = ['Athletic department', 'Collective or agency', 'Professional organization', 'Athlete'];
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var state = { org: null, saved: null, answers: {} };
+  var uid = 0;
+  function pills(name, opts, checked) {
+    return '<div class="pills">' + opts.map(function (o) {
+      var id = 'o' + (uid++);
+      return '<label class="pill" for="' + id + '"><input type="radio" id="' + id + '" name="' + name + '" value="' + esc(o) + '"' + (checked === o ? ' checked' : '') + '><span>' + esc(o) + '</span></label>';
+    }).join('') + '</div>';
   }
-
-  function submitForm() {
-    var fn = document.getElementById("fn").value.trim();
-    var ln = document.getElementById("ln").value.trim();
-    var org = document.getElementById("org").value.trim();
-    var em = document.getElementById("em").value.trim();
-    if (!fn || !ln || !org || !em || em.indexOf("@") === -1) {
-      showErr(8, true); shakeStep(); return;
-    }
-    showErr(8, false);
-    S.fn = fn; S.ln = ln; S.org = org; S.em = em;
-    S.ph = document.getElementById("ph").value.trim();
-    S.ref = document.getElementById("ref").value.trim();
-
-    var nb = document.getElementById("btn-next");
-    if (nb) { nb.disabled = true; nb.textContent = "Sending"; }
-    var qs = new URLSearchParams(window.location.search);
-    var utm = ["utm_source", "utm_medium", "utm_campaign", "utm_content"].map(function(k) { return qs.get(k) ? k + "=" + qs.get(k) : ""; }).filter(Boolean).join("&");
-    fetch("/api/inquiry", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: S.role, athletes: S.athletes, curr: S.curr, targ: S.targ, edu: S.edu, challenge: S.challenge, timeline: S.timeline,
-        fn: S.fn, ln: S.ln, org: S.org, em: S.em, ph: S.ph, ref: S.ref, utm: utm, website: (document.getElementById("hp-website") || {}).value || "" })
-    }).then(function(r) {
-      if (!r.ok) throw new Error("save failed");
-      showThanks();
-    }).catch(function() {
-      if (nb) { nb.disabled = false; nb.textContent = "Request a Research Partnership"; }
-      var e8 = document.getElementById("e8");
-      e8.textContent = "We could not send your request. Check your connection and try again, or email us directly.";
-      showErr(8, true);
+  function single(key, q, opts, optional) {
+    return '<fieldset class="q"><legend>' + esc(q) + (optional ? ' <span class="opt">(optional)</span>' : '') + '</legend>' + pills(key, opts) + '</fieldset>';
+  }
+  function grid(keys, labels, opts) {
+    return '<div class="grid-q">' + keys.map(function (k, i) {
+      return '<div class="grow" role="radiogroup" aria-label="' + esc(labels[i]) + '"><span>' + esc(labels[i]) + '</span>' + pills(k, opts) + '</div>';
+    }).join('') + '</div>';
+  }
+  $('orgPills').innerHTML = ORGS.map(function (o) {
+    var id = 'org' + (uid++);
+    return '<label class="pill" for="' + id + '"><input type="radio" id="' + id + '" name="org_type" value="' + esc(o) + '"><span>' + esc(o) + '</span></label>';
+  }).join('');
+  $('orgPills').addEventListener('change', function (e) {
+    var org = e.target.value;
+    state.org = org; state.saved = null;
+    $('err1').hidden = true;
+    if (org === 'Athlete') { $('versionQs').innerHTML = ''; $('act1').hidden = true; $('athleteNote').hidden = false; return; }
+    $('athleteNote').hidden = true;
+    var v = V[org], h = '';
+    (v.pre || []).forEach(function (p) { h += single(p.key, p.q, p.opts); });
+    h += single('roster_size', v.roster.q, v.roster.opts);
+    h += '<fieldset class="q"><legend>' + esc(v.bands.q) + '</legend><p class="hint">' + esc(v.bands.hint) + '</p>' + grid(BANDS, v.bands.rows, COUNT) + '</fieldset>';
+    h += '<fieldset class="q"><legend>' + esc(v.struct.q) + '</legend><label class="shortcut" for="notrack"><input type="checkbox" id="notrack"> We don\'t track any of this.</label><div id="structGrid">' + grid(SKEYS, v.struct.rows, STRUCT) + '</div></fieldset>';
+    v.extra.forEach(function (x) { h += single(x.key, x.q, x.opts, x.optional); });
+    $('versionQs').innerHTML = h;
+    $('act1').hidden = false;
+    $('role').innerHTML = '<option value="">Choose your role</option>' + v.roles.map(function (r) { return '<option>' + esc(r) + '</option>'; }).join('');
+    $('orgLabel').textContent = v.orgLabel;
+    $('notrack').addEventListener('change', function () {
+      var g = $('structGrid').firstElementChild;
+      g.classList.toggle('off', this.checked);
+      SKEYS.forEach(function (k) {
+        var r = document.querySelector('input[name="' + k + '"][value="Don\'t track"]');
+        if (r) r.checked = this.checked ? true : r.checked;
+        if (!this.checked && r) r.checked = false;
+      }, this);
     });
-  }
-
-  function showThanks() {
-    buildSummary();
-
-    document.getElementById("screen-main").classList.remove("active");
-    document.getElementById("screen-ty").classList.add("active");
-    setTimeout(function() { window.location.href = 'thank-you.html'; }, 2800);
-
-    renderDots("ty-dots");
-    window.scrollTo(0, 0);
-  }
-
-  function buildSummary() {
-    var RM = {
-      "athletic_dept": "Athletic Dept / NIL Collective",
-      "agent": "Sports Agent / Manager",
-      "pro_org": "Pro Sports Organization",
-      "other": "Other"
-    };
-    var EM = { "formal": "Formal Program", "informal": "Informal", "building": "Building Now", "none": "Not Yet" };
-    var CM = {
-      "deal_flow": "Insufficient Deal Pipeline",
-      "readiness": "Athlete Business Readiness",
-      "compliance": "Compliance and Risk",
-      "recruiting": "Recruiting Differentiation",
-      "systems": "No Scalable Systems"
-    };
-    var TM = { "now": "Immediately", "quarter": "Within 90 Days", "exploring": "Exploring" };
-
-    var rows = [
-      ["Organization", S.org],
-      ["Role", RM[S.role] || S.role || ""],
-      ["Athletes", S.athletes || ""],
-      ["Current NIL ARR", fmt(S.curr || 0)],
-      ["Target NIL ARR", fmt(S.targ || 0)],
-      ["Education", EM[S.edu] || S.edu || ""],
-      ["Primary Challenge", CM[S.challenge] || S.challenge || ""],
-      ["Timeline", TM[S.timeline] || S.timeline || ""],
-      ["Contact", S.em]
-    ];
-
-    var html = "";
-    for (var i = 0; i < rows.length; i++) {
-      html += '<div class="ty-row"><span class="ty-k">' + rows[i][0] + '</span><span class="ty-v">' + rows[i][1] + '</span></div>';
-    }
-    document.getElementById("ty-rows").innerHTML = html;
-  }
-
-  document.addEventListener("change", function(e) {
-    if (e.target.name === "role") showIns(1, ROLE_INS[e.target.value] || "");
-    if (e.target.name === "edu") showIns(5, EDU_INS[e.target.value] || "");
   });
-
-  window.addEventListener("load", function() {
-    setTimeout(function() {
-      var loader = document.getElementById("screen-load");
-      loader.style.opacity = "0";
-      setTimeout(function() { loader.style.display = "none"; }, 400);
-    }, 700);
-    renderDots("prog-dots");
-    updateProgress();
+  function val(name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; }
+  function collect() {
+    var v = V[state.org], a = { org_type: state.org, roster_size: val('roster_size') };
+    (v.pre || []).forEach(function (p) { a[p.key] = val(p.key); });
+    BANDS.concat(SKEYS).forEach(function (k) { a[k] = val(k); });
+    v.extra.forEach(function (x) { a[x.key] = val(x.key); });
+    var qs = new URLSearchParams(location.search);
+    a.utm = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].map(function (k) { return qs.get(k) ? k + '=' + qs.get(k) : ''; }).filter(Boolean).join('&');
+    return a;
+  }
+  function missing(a) {
+    var v = V[state.org];
+    var req = ['roster_size'].concat((v.pre || []).map(function (p) { return p.key; }), BANDS, SKEYS);
+    return req.some(function (k) { return !a[k]; });
+  }
+  function show(n) {
+    $('screen1').hidden = n !== 1; $('screen2').hidden = n !== 2; $('done').hidden = n !== 3;
+    $('st1').toggleAttribute('aria-current', n === 1); if (n === 1) $('st1').setAttribute('aria-current', 'step');
+    if (n === 2) $('st2').setAttribute('aria-current', 'step'); else $('st2').removeAttribute('aria-current');
+    if (n === 3) $('steps').hidden = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function post(body) {
+    return fetch('/api/inquiry', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || 'Something went wrong.'); return j; }); });
+  }
+  $('screen1').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!state.org || state.org === 'Athlete') return;
+    var a = collect();
+    if (missing(a)) { $('err1').textContent = 'Answer each question above. Optional ones can be skipped.'; $('err1').hidden = false; return; }
+    $('err1').hidden = true; state.answers = a;
+    var btn = $('next1'); btn.disabled = true; btn.textContent = 'Saving';
+    post(Object.assign({ step: 'snapshot', website: $('website').value }, a))
+      .then(function (j) { state.saved = { id: j.id, token: j.token }; })
+      .catch(function () { state.saved = null; })
+      .then(function () { btn.disabled = false; btn.textContent = 'Continue'; show(2); });
   });
-
+  $('back2').addEventListener('click', function () { show(1); });
+  $('screen2').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var c = { name: $('name').value.trim(), role: $('role').value, organization: $('organization').value.trim(), email: $('email').value.trim(), phone: $('phone').value.trim() };
+    if (!c.name || !c.organization || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) { $('err2').textContent = 'Add your name, ' + $('orgLabel').textContent.toLowerCase() + ' and a valid work email.'; $('err2').hidden = false; return; }
+    $('err2').hidden = true;
+    var btn = $('next2'); btn.disabled = true; btn.textContent = 'Sending';
+    var body = Object.assign({ step: 'contact', website: $('website').value }, state.answers, c, state.saved || {});
+    post(body).then(function () { show(3); }).catch(function (err) {
+      btn.disabled = false; btn.textContent = 'Get my private briefing';
+      $('err2').textContent = 'We could not send your request. Check your connection and try again.'; $('err2').hidden = false;
+    });
+  });
 })();
 </script>
+
 </body>
 </html>

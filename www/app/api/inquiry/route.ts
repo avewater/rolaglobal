@@ -1,33 +1,92 @@
+import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { OS_TABLES, createRecord } from '@/lib/os-airtable';
+import { OS_TABLES, createRecord, getRecord, updateRecord } from '@/lib/os-airtable';
 
 export const dynamic = 'force-dynamic';
 
-const AUDIENCE: Record<string, string> = {
-  athletic_dept: 'Athletic department or university',
-  agent: 'Collective, agency or pro org',
-  pro_org: 'Collective, agency or pro org',
-  other: 'Researcher, journalist or industry',
-};
-const LABEL: Record<string, Record<string, string>> = {
-  role: { athletic_dept: 'Athletic department or NIL collective', agent: 'Sports agent or player manager', pro_org: 'Professional sports organization', other: 'Other' },
-  edu: { formal: 'Yes, formal program', informal: 'Yes, informally', building: 'No, actively building', none: 'No, not yet' },
-  challenge: {
-    deal_flow: 'Insufficient brand deal pipeline',
-    readiness: 'Athlete business readiness',
-    compliance: 'Compliance and risk management',
-    recruiting: 'Recruiting and retention differentiation',
-    systems: 'No scalable systems or infrastructure',
+// Two-step Research Partnership form.
+// step "snapshot": saves screen 1 answers as a partial record, returns a signed token.
+// step "contact": completes that record with contact details and adds the person to the pipeline.
+
+const COUNT = ['0', '1 to 5', '6 to 20', '21 to 50', '50+', 'Not sure'];
+const STRUCT = ['None', 'Some', 'Most', "Don't track"];
+const TOTAL = ['Under $250K', '$250K to $1M', '$1M to $5M', '$5M+', 'Not sure'];
+
+const VERSIONS = {
+  'Athletic department': {
+    audience: 'Athletic department or university',
+    band_set: 'College $5K/$25K/$100K',
+    roster: ['Under 100', '100 to 300', '300 to 600', '600+'],
+    extra: { total_nil_band: TOTAL, rev_share: ['Yes', 'Not yet', 'Prefer not to say'] },
   },
-  timeline: { now: 'Immediately', quarter: 'Within 90 days', exploring: 'Exploring options' },
-};
+  'Collective or agency': {
+    audience: 'Collective, agency or pro org',
+    band_set: 'College $5K/$25K/$100K',
+    roster: ['Under 25', '25 to 100', '100 to 300', '300+'],
+    extra: { total_nil_band: TOTAL, org_subtype: ['NIL collective', 'Athlete agency', 'Other'] },
+  },
+  'Professional organization': {
+    audience: 'Collective, agency or pro org',
+    band_set: 'Pro $100K/$1M/$5M',
+    roster: ['Under 15', '15 to 50', '50 to 150', '150+'],
+    extra: { biz_education: ['Yes', 'Not yet', 'Exploring'] },
+  },
+} as const;
+type OrgType = keyof typeof VERSIONS;
+
+const BAND_FIELDS = ['nil_band1_count', 'nil_band2_count', 'nil_band3_count'] as const;
+const STRUCT_FIELDS = ['struct_llc', 'struct_nonprofit', 'struct_trust', 'struct_life_ins', 'struct_cpa'] as const;
 
 const clip = (v: unknown, n = 200) => String(v ?? '').trim().slice(0, n);
-const money = (v: unknown) => {
-  const n = Number(v) || 0;
-  return n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${n}`;
+const pick = (v: unknown, allowed: readonly string[]) => {
+  const s = clip(v, 60);
+  return allowed.includes(s) ? s : null;
 };
 const todayLA = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
+
+function sign(id: string) {
+  const s = process.env.OS_SESSION_SECRET || '';
+  return crypto.createHmac('sha256', s).update(`inquiry:${id}`).digest('base64url');
+}
+function tokenOk(id: string, token: string) {
+  const a = Buffer.from(sign(id));
+  const b = Buffer.from(String(token || ''));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function snapshotFields(b: Record<string, unknown>) {
+  const org = clip(b.org_type, 40) as OrgType;
+  const v = VERSIONS[org];
+  if (!v) return { error: 'Choose who you represent.' };
+  const roster = pick(b.roster_size, v.roster);
+  if (!roster) return { error: 'Choose your roster size.' };
+  const f: Record<string, unknown> = {
+    org_type: org,
+    audience_path: v.audience,
+    band_set: v.band_set,
+    roster_size: roster,
+    form_stage: 'Snapshot only',
+    status: 'New',
+    source_utm: clip(b.utm, 300) || 'direct',
+    submitted_at: new Date().toISOString(),
+  };
+  for (const k of BAND_FIELDS) {
+    const x = pick(b[k], COUNT);
+    if (!x) return { error: 'Answer each income row.' };
+    f[k] = x;
+  }
+  for (const k of STRUCT_FIELDS) {
+    const x = pick(b[k], STRUCT);
+    if (!x) return { error: 'Answer each structure row.' };
+    f[k] = x;
+  }
+  for (const [k, allowed] of Object.entries(v.extra)) {
+    const x = pick(b[k], allowed as readonly string[]);
+    if (x) f[k] = x;
+    else if (k === 'org_subtype') return { error: 'Choose what best describes you.' };
+  }
+  return { fields: f, org };
+}
 
 export async function POST(req: NextRequest) {
   let b: Record<string, unknown>;
@@ -36,64 +95,85 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'The form could not be read. Try again.' }, { status: 400 });
   }
-  // Bots fill the hidden website field. Pretend success and store nothing.
-  if (clip(b.website)) return NextResponse.json({ ok: true });
-
-  const first = clip(b.fn, 80);
-  const last = clip(b.ln, 80);
-  const org = clip(b.org, 160);
-  const email = clip(b.em, 160);
-  if (!first || !last || !org || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: 'Name, organization and a valid email are required.' }, { status: 400 });
-  }
-  const role = clip(b.role, 40);
-  const phone = clip(b.ph, 40);
-  const name = `${first} ${last}`;
-
-  const message = [
-    `Role: ${LABEL.role[role] || role || 'Not given'}`,
-    `Athletes in program: ${clip(b.athletes, 20) || 'Not given'}`,
-    `Current annual NIL revenue: ${money(b.curr)}`,
-    `12-month NIL target: ${money(b.targ)}`,
-    `Business education today: ${LABEL.edu[clip(b.edu, 20)] || 'Not given'}`,
-    `Biggest challenge: ${LABEL.challenge[clip(b.challenge, 20)] || 'Not given'}`,
-    `Timeline: ${LABEL.timeline[clip(b.timeline, 20)] || 'Not given'}`,
-    phone ? `Phone: ${phone}` : '',
-    clip(b.ref) ? `Heard about ROLA from: ${clip(b.ref)}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n');
-
-  const source = [clip(b.utm, 300), clip(b.ref) ? `ref=${clip(b.ref)}` : ''].filter(Boolean).join(' | ');
+  if (clip(b.website)) return NextResponse.json({ ok: true, id: 'rec0', token: 'x' });
 
   try {
-    await createRecord(OS_TABLES.inquiries, {
-      inquiry: `${org} · ${name} · ${todayLA()}`,
-      audience_path: AUDIENCE[role] || AUDIENCE.other,
-      contact_name: name,
-      organization: org,
-      email,
-      message,
-      source_utm: source || 'direct',
-      status: 'New',
-      submitted_at: new Date().toISOString(),
-    });
-    // Put the person straight into the pipeline so Michael sees them on Today.
-    await createRecord(OS_TABLES.contacts, {
-      name,
-      title: org,
-      channel: 'Email',
-      stage: 'Response received',
-      owner: 'Michael',
-      next_action: 'Reply to research partnership request',
-      next_action_due: todayLA(),
-      email,
-      ...(phone ? { phone } : {}),
-      notes: message,
-    });
-    return NextResponse.json({ ok: true });
+    if (b.step === 'snapshot') {
+      const s = snapshotFields(b);
+      if ('error' in s) return NextResponse.json({ error: s.error }, { status: 400 });
+      const rec = await createRecord(OS_TABLES.inquiries, { ...s.fields, inquiry: `${s.org} · snapshot · ${todayLA()}` });
+      return NextResponse.json({ ok: true, id: rec.id, token: sign(rec.id) });
+    }
+
+    if (b.step === 'contact') {
+      const name = clip(b.name, 120);
+      const org = clip(b.organization, 160);
+      const email = clip(b.email, 160);
+      const role = clip(b.role, 80);
+      const phone = clip(b.phone, 40);
+      if (!name || !org || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return NextResponse.json({ error: 'Name, organization and a valid work email are required.' }, { status: 400 });
+      }
+
+      const contactFields: Record<string, unknown> = {
+        contact_name: name,
+        organization: org,
+        email,
+        contact_role: role,
+        form_stage: 'Complete',
+        inquiry: `${org} · ${name} · ${todayLA()}`,
+        ...(phone ? { phone } : {}),
+      };
+
+      let recId = clip(b.id, 20);
+      let snap: Record<string, unknown> | null = null;
+      if (recId && tokenOk(recId, clip(b.token, 100))) {
+        const rec = await getRecord(OS_TABLES.inquiries, recId);
+        if (rec) {
+          snap = rec.fields;
+          await updateRecord(OS_TABLES.inquiries, recId, contactFields);
+        } else recId = '';
+      } else recId = '';
+
+      if (!recId) {
+        // Snapshot save failed earlier: store everything in one record now.
+        const s = snapshotFields(b);
+        const base = 'error' in s ? { status: 'New', submitted_at: new Date().toISOString() } : s.fields;
+        snap = base;
+        await createRecord(OS_TABLES.inquiries, { ...base, ...contactFields });
+      }
+
+      const summary = [
+        `Org type: ${snap?.org_type ?? 'Not given'}${snap?.org_subtype ? ` (${snap.org_subtype})` : ''}`,
+        `Roster: ${snap?.roster_size ?? 'Not given'}`,
+        `Income bands (${snap?.band_set ?? ''}): ${snap?.nil_band1_count ?? '?'} / ${snap?.nil_band2_count ?? '?'} / ${snap?.nil_band3_count ?? '?'}`,
+        `LLC ${snap?.struct_llc ?? '?'} · Nonprofit ${snap?.struct_nonprofit ?? '?'} · Trust ${snap?.struct_trust ?? '?'} · Life insurance ${snap?.struct_life_ins ?? '?'} · CPA ${snap?.struct_cpa ?? '?'}`,
+        snap?.total_nil_band ? `Total NIL: ${snap.total_nil_band}` : '',
+        snap?.rev_share ? `Revenue share: ${snap.rev_share}` : '',
+        snap?.biz_education ? `Business education: ${snap.biz_education}` : '',
+        role ? `Role: ${role}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      await createRecord(OS_TABLES.contacts, {
+        name,
+        title: [role, org].filter(Boolean).join(', '),
+        channel: 'Email',
+        stage: 'Response received',
+        owner: 'Michael',
+        next_action: 'Send private briefing',
+        next_action_due: todayLA(),
+        email,
+        ...(phone ? { phone } : {}),
+        notes: summary,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    return NextResponse.json({ error: 'Unknown step.' }, { status: 400 });
   } catch (e) {
     console.error('inquiry', e);
-    return NextResponse.json({ error: 'We could not save your request. Try again in a minute.' }, { status: 500 });
+    return NextResponse.json({ error: 'We could not save your answers. Try again in a minute.' }, { status: 500 });
   }
 }
