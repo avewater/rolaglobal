@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OS_TABLES, listAll, num, str, list, type AirtableRecord } from '@/lib/os-airtable';
 import { COOKIE, cookieOptions } from '@/lib/os-auth';
 import { can, getUser } from '@/lib/os-session';
+import { CONTACT_FIELDS, LEAD_FIELDS, readActivity, readLead } from '@/lib/os-leads';
 import {
-  PIPELINE_STAGES,
+  CLOSED_STAGES,
   ROLE_REPORT_AGENTS,
+  ownerFor,
+  type Mention,
   SAMPLE_FLOOR,
   type Agent,
   type Contact,
@@ -18,7 +21,7 @@ import {
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
+const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 
 async function safe<T>(label: string, errors: string[], fn: () => Promise<T>): Promise<T | undefined> {
   try {
@@ -48,14 +51,14 @@ export async function GET(req: NextRequest) {
   const wantPipeline = can(user, 'pipeline');
   const seeContact = can(user, 'see_contact');
 
-  const [instRows, contactRows, reportRows, decisionRows, agentRows, inquiryRows] = await Promise.all([
+  const [instRows, contactRows, reportRows, decisionRows, agentRows, inquiryRows, mentionRows] = await Promise.all([
     wantPipeline || can(user, 'athletes')
       ? safe('Schools', errors, () => listAll(OS_TABLES.institutions, { fields: ['name', 'type', 'conference', 'tier', 'core_sample_count', 'page_public', 'floor_crossed_on'] }))
       : undefined,
     wantPipeline
       ? safe('Pipeline', errors, () =>
           listAll(OS_TABLES.contacts, {
-            fields: ['name', 'title', 'institution', 'stage', 'owner', 'channel', 'next_action', 'next_action_due', 'last_touch', ...(seeContact ? ['email', 'phone'] : [])],
+            fields: [...LEAD_FIELDS, ...(seeContact ? CONTACT_FIELDS : [])],
           }),
         )
       : undefined,
@@ -65,6 +68,15 @@ export async function GET(req: NextRequest) {
     can(user, 'decisions') ? safe('Decisions', errors, () => listAll(OS_TABLES.decisions)) : undefined,
     can(user, 'agents') ? safe('Agents', errors, () => listAll(OS_TABLES.agents, { sort: [{ field: 'sort' }] })) : undefined,
     wantPipeline ? safe('Inquiries', errors, () => listAll(OS_TABLES.inquiries, { fields: ['status'] })) : undefined,
+    wantPipeline && ownerFor(user.name)
+      ? safe('Mentions', errors, () =>
+          listAll(OS_TABLES.activity, {
+            filterByFormula: `AND(FIND('${ownerFor(user.name)}', {mentions}), IS_AFTER({at}, DATEADD(TODAY(), -14, 'days')))`,
+            sort: [{ field: 'at', direction: 'desc' }],
+            max: 30,
+          }),
+        )
+      : undefined,
   ]);
 
   const instName = new Map((instRows ?? []).map((r) => [r.id, str(r.fields.name)]));
@@ -82,19 +94,13 @@ export async function GET(req: NextRequest) {
 
   const contacts: Contact[] | undefined = contactRows
     ?.filter((r) => str(r.fields.name).trim() && !/^test\b/i.test(str(r.fields.name)))
-    .map((r) => ({
-      id: r.id,
-      name: str(r.fields.name),
-      title: str(r.fields.title),
-      institution: list(r.fields.institution).map((id) => instName.get(id) || '').filter(Boolean).join(', '),
-      stage: str(r.fields.stage) || PIPELINE_STAGES[0],
-      owner: str(r.fields.owner),
-      channel: str(r.fields.channel),
-      next_action: str(r.fields.next_action),
-      next_action_due: str(r.fields.next_action_due),
-      last_touch: str(r.fields.last_touch),
-      ...(seeContact ? { email: str(r.fields.email), phone: str(r.fields.phone) } : {}),
-    }));
+    .map((r) => readLead(r, seeContact, instName));
+
+  const leadName = new Map((contacts ?? []).map((c) => [c.id, c.name]));
+  const mentions: Mention[] | undefined = mentionRows?.map((r) => {
+    const a = readActivity(r);
+    return { ...a, lead_name: leadName.get(a.lead) || 'A lead' };
+  });
 
   const allowedAgents = new Set(ROLE_REPORT_AGENTS[user.role]);
   const reports: Report[] | undefined = reportRows
@@ -129,11 +135,15 @@ export async function GET(req: NextRequest) {
   const t = today();
   const tiles: Tile[] = [];
   if (contacts) {
-    const due = contacts.filter((c) => c.next_action_due && c.next_action_due <= t && c.stage !== 'Partnership active').length;
-    tiles.push({ key: 'pipeline', label: 'In pipeline', value: String(contacts.length), note: 'institutional contacts', go: 'pipeline', tone: 'neutral' });
-    tiles.push({ key: 'due', label: 'Next actions due', value: String(due), note: due ? 'due today or overdue' : 'nothing overdue', go: 'pipeline', tone: due ? 'warn' : 'ok' });
-    tiles.push({ key: 'meetings', label: 'Meetings booked', value: String(contacts.filter((c) => c.stage === 'Meeting booked').length), go: 'pipeline', tone: 'neutral' });
-    tiles.push({ key: 'active', label: 'Active partnerships', value: String(contacts.filter((c) => c.stage === 'Partnership active').length), go: 'pipeline', tone: 'neutral' });
+    const open = contacts.filter((c) => !CLOSED_STAGES.includes(c.stage));
+    const mine = ownerFor(user.name);
+    const queue = open.filter((c) => !mine || c.owner === mine);
+    const due = queue.filter((c) => c.stage !== 'Replied' && c.next_action_due && c.next_action_due <= t).length;
+    const replies = queue.filter((c) => c.stage === 'Replied').length;
+    tiles.push({ key: 'queue', label: 'In my queue', value: String(due + replies), note: due + replies ? `${due} due or overdue, ${replies} replies waiting` : 'all clear', go: 'queue', tone: due + replies ? 'warn' : 'ok' });
+    tiles.push({ key: 'pipeline', label: 'Open leads', value: String(open.length), note: 'across both brands', go: 'pipeline', tone: 'neutral' });
+    tiles.push({ key: 'meetings', label: 'Meetings booked', value: String(contacts.filter((c) => c.stage === 'Meeting Booked').length), go: 'pipeline', tone: 'neutral' });
+    tiles.push({ key: 'won', label: 'Closed won', value: String(contacts.filter((c) => c.stage === 'Closed Won').length), go: 'pipeline', tone: 'neutral' });
   }
   if (inquiryRows) {
     const fresh = inquiryRows.filter((r) => str(r.fields.status) === 'New' || !r.fields.status).length;
@@ -164,6 +174,6 @@ export async function GET(req: NextRequest) {
     tiles.push({ key: 'reports', label: 'Agent reports this week', value: String(recent.length), note: failed ? `${failed} failed` : undefined, go: 'reports', tone: failed ? 'bad' : 'neutral' });
   }
 
-  const data: OsData = { user, generatedAt: new Date().toISOString(), tiles, contacts, schools, reports, decisions, agents, errors };
+  const data: OsData = { user, generatedAt: new Date().toISOString(), tiles, contacts, mentions, schools, reports, decisions, agents, errors };
   return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } });
 }

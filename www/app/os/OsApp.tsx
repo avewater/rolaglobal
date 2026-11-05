@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ApiError, ImportView, LeadDrawer, MoveDialog, Pipeline, Queue, api, type Crm } from './crm';
 import {
-  PIPELINE_STAGES,
+  REASON_STAGES,
   SAMPLE_FLOOR,
+  isOpenStage,
   sectionsFor,
   type Contact,
   type OsData,
@@ -19,6 +21,10 @@ export default function OsApp() {
   const [error, setError] = useState('');
   const [section, setSection] = useState<SectionKey>('today');
   const [refreshing, setRefreshing] = useState(false);
+  const [leads, setLeads] = useState<Contact[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [moving, setMoving] = useState<{ lead: Contact; stage: string } | null>(null);
+  const [toast, setToast] = useState('');
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -31,6 +37,7 @@ export default function OsApp() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'The OS could not load.');
       setData(json);
+      setLeads(json.contacts ?? []);
       setPhase('ready');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'The OS could not load.');
@@ -59,6 +66,56 @@ export default function OsApp() {
     return () => window.removeEventListener('hashchange', read);
   }, [sections]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(''), 3200);
+    return () => clearTimeout(id);
+  }, [toast]);
+
+  const patch = useCallback((l: Contact) => setLeads((xs) => xs.map((x) => (x.id === l.id ? { ...x, ...l } : x))), []);
+
+  // A stage move goes straight through when the rules allow it, otherwise it asks for what is missing.
+  const move = useCallback(
+    async (lead: Contact, stage: string) => {
+      if (lead.dnc && stage !== 'Do Not Contact' && data?.user.role !== 'Admin') {
+        setToast('This lead is marked Do Not Contact. Only an admin can move it.');
+        return;
+      }
+      if (REASON_STAGES.includes(stage) || (isOpenStage(stage) && (!lead.next_action || !lead.next_action_due))) {
+        setMoving({ lead, stage });
+        return;
+      }
+      const before = lead;
+      patch({ ...lead, stage });
+      try {
+        const r = await api<{ lead: Contact }>(`/api/os/lead/${lead.id}`, { action: 'stage', stage });
+        patch(r.lead);
+        setToast(`${lead.name} moved to ${stage}.`);
+      } catch (e) {
+        patch(before);
+        if (e instanceof ApiError && (e.code === 'need_reason' || e.code === 'need_next_action')) setMoving({ lead: before, stage });
+        else setToast(e instanceof Error ? e.message : 'Could not move.');
+      }
+    },
+    [data?.user.role, patch],
+  );
+
+  const crm: Crm | null = data
+    ? {
+        user: data.user,
+        leads,
+        mentions: data.mentions ?? [],
+        canEdit: data.user.perms.includes('edit_leads'),
+        canImport: data.user.perms.includes('import_leads'),
+        patch,
+        add: (l) => setLeads((xs) => [l, ...xs]),
+        open: setOpenId,
+        move,
+        notify: setToast,
+        reload: load,
+      }
+    : null;
+
   const go = (key: SectionKey) => {
     window.location.hash = key;
     window.scrollTo({ top: 0 });
@@ -66,7 +123,7 @@ export default function OsApp() {
 
   if (phase === 'loading') return <div className="aos-center aos-muted">Loading</div>;
   if (phase === 'signed_out') return <SignIn onDone={load} />;
-  if (phase === 'error' || !data)
+  if (phase === 'error' || !data || !crm)
     return (
       <div className="aos-center">
         <div className="aos-stack">
@@ -108,14 +165,31 @@ export default function OsApp() {
         </header>
         {data.errors.length > 0 && <div className="aos-banner">Could not load: {data.errors.join(', ')}. The rest is current.</div>}
 
+        {section === 'queue' && <Queue crm={crm} />}
         {section === 'today' && <Today data={data} go={go} />}
-        {section === 'pipeline' && <Pipeline contacts={data.contacts ?? []} />}
+        {section === 'pipeline' && <Pipeline crm={crm} />}
+        {section === 'import' && <ImportView crm={crm} />}
         {section === 'schools' && <Schools data={data} />}
         {section === 'reports' && <Reports data={data} />}
         {section === 'decisions' && <Decisions data={data} />}
         {section === 'agents' && <Agents data={data} />}
         {section === 'account' && <Account data={data} />}
       </main>
+
+      {openId && <LeadDrawer key={openId} id={openId} crm={crm} onClose={() => setOpenId(null)} />}
+      {moving && (
+        <MoveDialog
+          lead={moving.lead}
+          stage={moving.stage}
+          notify={setToast}
+          onCancel={() => setMoving(null)}
+          onDone={(l) => {
+            patch(l);
+            setMoving(null);
+          }}
+        />
+      )}
+      {toast && <div className="aos-toast" role="status">{toast}</div>}
 
       <nav className="aos-tabs" aria-label="Sections">
         {tabs.map((s) => (
@@ -222,65 +296,6 @@ function Today({ data, go }: { data: OsData; go: (k: SectionKey) => void }) {
           ))}
         </section>
       )}
-    </div>
-  );
-}
-
-function CopyBtn({ value, label }: { value: string; label: string }) {
-  const [done, setDone] = useState(false);
-  return (
-    <button
-      className="aos-chip"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(value);
-          setDone(true);
-          setTimeout(() => setDone(false), 1500);
-        } catch {}
-      }}
-    >
-      {done ? 'Copied' : label}
-    </button>
-  );
-}
-
-function Pipeline({ contacts }: { contacts: Contact[] }) {
-  const t = todayLA();
-  if (!contacts.length)
-    return <p className="aos-muted">No contacts yet. Once the CRM is imported, every athletic department contact appears here by stage.</p>;
-  return (
-    <div className="aos-board">
-      {PIPELINE_STAGES.map((stage) => {
-        const items = contacts.filter((c) => c.stage === stage).sort((a, b) => (a.next_action_due || '9999').localeCompare(b.next_action_due || '9999'));
-        return (
-          <section key={stage} className="aos-col">
-            <div className="aos-col-head">
-              <span>{stage}</span>
-              <span className="aos-count">{items.length}</span>
-            </div>
-            {items.map((c) => {
-              const overdue = c.next_action_due && c.next_action_due <= t && stage !== 'Partnership active';
-              return (
-                <article key={c.id} className="aos-card">
-                  <div className="aos-row-title">{c.name}</div>
-                  <div className="aos-muted aos-small">{[c.title, c.institution].filter(Boolean).join(' · ')}</div>
-                  {c.next_action && (
-                    <div className="aos-small">
-                      {c.next_action}
-                      {c.next_action_due && <> · <span className={overdue ? 'aos-due' : 'aos-muted'}>{fmtDate(c.next_action_due)}</span></>}
-                    </div>
-                  )}
-                  <div className="aos-chips">
-                    {c.owner && <Pill>{c.owner}</Pill>}
-                    {c.email && <CopyBtn value={c.email} label="Copy email" />}
-                    {c.phone && <CopyBtn value={c.phone} label="Copy phone" />}
-                  </div>
-                </article>
-              );
-            })}
-          </section>
-        );
-      })}
     </div>
   );
 }

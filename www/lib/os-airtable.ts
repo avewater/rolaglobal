@@ -10,6 +10,7 @@ export const OS_TABLES = {
   contacts: 'tbltk2nmj13U6fz5V',
   inquiries: 'tbltNDu34zkYb86gA',
   athletes: 'tblZIj9HNAE4Sgq2m',
+  activity: 'tbl2qnsmqNVDtzhfZ',
 } as const;
 
 export type AirtableRecord = { id: string; createdTime: string; fields: Record<string, unknown> };
@@ -83,6 +84,17 @@ export async function getRecord(table: string, id: string): Promise<AirtableReco
 // typecast stays false: a select option that does not exist yet is refused, never invented.
 export async function createRecord(table: string, fields: Record<string, unknown>): Promise<AirtableRecord> {
   return call(table, { method: 'POST', body: JSON.stringify({ records: [{ fields }], typecast: false }) }).then((r) => r.records[0]);
+}
+
+// Airtable takes at most 10 records per write.
+export async function createRecords(table: string, rows: Record<string, unknown>[]): Promise<AirtableRecord[]> {
+  const out: AirtableRecord[] = [];
+  for (let i = 0; i < rows.length; i += 10) {
+    const batch = rows.slice(i, i + 10).map((fields) => ({ fields }));
+    const r = await call(table, { method: 'POST', body: JSON.stringify({ records: batch, typecast: false }) });
+    out.push(...r.records);
+  }
+  return out;
 }
 
 export async function updateRecord(table: string, id: string, fields: Record<string, unknown>): Promise<AirtableRecord> {
