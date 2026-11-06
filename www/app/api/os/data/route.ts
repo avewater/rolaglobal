@@ -3,10 +3,12 @@ import { OS_TABLES, listAll, num, str, list, type AirtableRecord } from '@/lib/o
 import { COOKIE, cookieOptions } from '@/lib/os-auth';
 import { can, getUser } from '@/lib/os-session';
 import { CONTACT_FIELDS, LEAD_FIELDS, readActivity, readLead } from '@/lib/os-leads';
-import { WORK_FIELDS, readItem } from '@/lib/os-workspace';
+import { ACCOUNT_READ, ITEM_READ, readAccount, readItem } from '@/lib/os-accounts';
 import {
   CLOSED_STAGES,
   ROLE_REPORT_AGENTS,
+  effectivePerms,
+  isRole,
   ownerFor,
   type Mention,
   SAMPLE_FLOOR,
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
   const wantPipeline = can(user, 'pipeline');
   const seeContact = can(user, 'see_contact');
 
-  const [instRows, contactRows, reportRows, decisionRows, agentRows, inquiryRows, mentionRows, workRows, teamRows] = await Promise.all([
+  const [instRows, contactRows, reportRows, decisionRows, agentRows, inquiryRows, mentionRows, accountRows, itemRows, teamRows] = await Promise.all([
     wantPipeline || can(user, 'athletes')
       ? safe('Schools', errors, () => listAll(OS_TABLES.institutions, { fields: ['name', 'type', 'conference', 'tier', 'core_sample_count', 'page_public', 'floor_crossed_on'] }))
       : undefined,
@@ -78,16 +80,19 @@ export async function GET(req: NextRequest) {
           }),
         )
       : undefined,
-    safe('Workspace', errors, () =>
-      listAll(OS_TABLES.workspace, {
-        fields: WORK_FIELDS,
-        // Open items, plus anything finished in the last 30 days.
-        filterByFormula: `AND({owner_rec} = '${user.id}', OR({status} = 'Open', IS_AFTER({done_at}, DATEADD(NOW(), -30, 'days'))))`,
-        max: 500,
-      }),
-    ),
-    user.role === 'Admin'
-      ? safe('Team', errors, () => listAll(OS_TABLES.reps, { fields: ['rep_name', 'active'], filterByFormula: '{active}' }))
+    can(user, 'accounts') ? safe('Accounts', errors, () => listAll(OS_TABLES.accounts, { fields: ACCOUNT_READ, max: 2000 })) : undefined,
+    can(user, 'accounts')
+      ? safe('Tasks', errors, () =>
+          listAll(OS_TABLES.items, {
+            fields: ITEM_READ,
+            // Everything open, plus what was finished in the last 30 days. Older history loads inside each account.
+            filterByFormula: `OR({status} = 'Open', IS_AFTER({done_at}, DATEADD(NOW(), -30, 'days')))`,
+            max: 3000,
+          }),
+        )
+      : undefined,
+    can(user, 'accounts')
+      ? safe('Team', errors, () => listAll(OS_TABLES.reps, { fields: ['rep_name', 'active', 'os_role', 'os_grant', 'os_revoke'], filterByFormula: '{active}' }))
       : undefined,
   ]);
 
@@ -114,8 +119,16 @@ export async function GET(req: NextRequest) {
     return { ...a, lead_name: leadName.get(a.lead) || 'A lead' };
   });
 
-  const workspace = workRows?.map(readItem);
-  const team = teamRows?.map((r) => ({ id: r.id, name: str(r.fields.rep_name) })).filter((m) => m.name).sort((a, b) => a.name.localeCompare(b.name));
+  const accounts = accountRows?.map(readAccount).sort((a, b) => a.name.localeCompare(b.name));
+  const items = itemRows?.map(readItem);
+  const team = teamRows
+    ?.map((r) => ({
+      id: r.id,
+      name: str(r.fields.rep_name),
+      canAccounts: isRole(r.fields.os_role) && effectivePerms(r.fields.os_role, list(r.fields.os_grant), list(r.fields.os_revoke)).includes('accounts'),
+    }))
+    .filter((m) => m.name)
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const allowedAgents = new Set(ROLE_REPORT_AGENTS[user.role]);
   const reports: Report[] | undefined = reportRows
@@ -160,15 +173,15 @@ export async function GET(req: NextRequest) {
     tiles.push({ key: 'meetings', label: 'Meetings booked', value: String(contacts.filter((c) => c.stage === 'Meeting Booked').length), go: 'pipeline', tone: 'neutral' });
     tiles.push({ key: 'won', label: 'Closed won', value: String(contacts.filter((c) => c.stage === 'Closed Won').length), go: 'pipeline', tone: 'neutral' });
   }
-  if (workspace) {
+  if (items) {
     const pt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
-    const due = workspace.filter((i) => i.status === 'Open' && i.due_date && i.due_date <= pt);
-    tiles.push({
+    const due = items.filter((i) => i.status === 'Open' && i.kind !== 'Update' && i.assignee === user.id && i.due_date && i.due_date <= pt);
+    tiles.unshift({
       key: 'work',
-      label: 'My tasks and messages due',
+      label: 'My tasks due',
       value: String(due.length),
       note: due.length ? 'today or overdue' : 'nothing due',
-      go: 'workspace',
+      go: 'tasks',
       tone: due.length ? 'warn' : 'ok',
     });
   }
@@ -201,6 +214,6 @@ export async function GET(req: NextRequest) {
     tiles.push({ key: 'reports', label: 'Agent reports this week', value: String(recent.length), note: failed ? `${failed} failed` : undefined, go: 'reports', tone: failed ? 'bad' : 'neutral' });
   }
 
-  const data: OsData = { user, generatedAt: new Date().toISOString(), tiles, contacts, mentions, workspace, team, schools, reports, decisions, agents, errors };
+  const data: OsData = { user, generatedAt: new Date().toISOString(), tiles, contacts, mentions, accounts, items, team, schools, reports, decisions, agents, errors };
   return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } });
 }

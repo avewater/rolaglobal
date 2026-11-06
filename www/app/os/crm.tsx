@@ -14,6 +14,7 @@ import {
   SOURCES,
   isOpenStage,
   ownerFor,
+  type Account,
   type Activity,
   type Contact,
   type Mention,
@@ -62,7 +63,8 @@ export type Crm = {
   move: (l: Contact, stage: string) => void;
   notify: (msg: string) => void;
   reload: () => void;
-  compose?: (kind: 'Entry' | 'Message', lead: Contact) => void;
+  accountFor?: (leadId: string) => Account | undefined;
+  toAccount?: (lead: Contact, existing?: Account) => void;
 };
 
 function Pill({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: 'ok' | 'warn' | 'bad' | 'neutral' }) {
@@ -606,13 +608,20 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
               </section>
             )}
 
-            {crm.compose && (
+            {crm.toAccount && (
               <section className="aos-stack">
-                <div className="aos-eyebrow">My workspace</div>
-                <div className="aos-chips">
-                  <button className="aos-chip aos-chip-lg" disabled={lead.dnc} onClick={() => crm.compose!('Message', lead)}>Draft a message</button>
-                  <button className="aos-chip aos-chip-lg" onClick={() => crm.compose!('Entry', lead)}>Add a task or note</button>
-                </div>
+                <div className="aos-eyebrow">Account</div>
+                {(() => {
+                  const acc = crm.accountFor?.(lead.id);
+                  return acc ? (
+                    <button className="aos-chip aos-chip-lg aos-self-start" onClick={() => crm.toAccount!(lead, acc)}>Open account: {acc.name}</button>
+                  ) : (
+                    <>
+                      <button className="aos-chip aos-chip-lg aos-self-start" onClick={() => crm.toAccount!(lead)}>Create account from this lead</button>
+                      <span className="aos-small aos-muted">Tasks, notes and message drafts live in accounts.</span>
+                    </>
+                  );
+                })()}
               </section>
             )}
 

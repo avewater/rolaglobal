@@ -21,15 +21,18 @@ export const PERMS = [
   'playbook',
   'edit_leads',
   'import_leads',
+  'accounts',
+  'assign_tasks',
 ] as const;
 export type Perm = (typeof PERMS)[number];
 
 export const ROLE_DEFAULTS: Record<Role, Perm[]> = {
   Admin: [...PERMS],
-  Partner: ['today', 'pipeline', 'see_contact', 'edit_leads', 'athletes', 'workshops', 'partnerships', 'report', 'foundations', 'reports', 'tools', 'playbook'],
+  Partner: ['today', 'accounts', 'pipeline', 'see_contact', 'edit_leads', 'athletes', 'workshops', 'partnerships', 'report', 'foundations', 'reports', 'tools', 'playbook'],
   // VA is the Outreach role (Rein): works the pipeline end to end, no revenue, no import.
-  VA: ['today', 'pipeline', 'see_contact', 'edit_leads', 'workshops', 'reports', 'tools', 'playbook'],
-  Facilitator: ['today', 'athletes', 'workshops', 'tools', 'playbook'],
+  // assign_tasks: Rein can assign account tasks to teammates (Michael, Nov 6).
+  VA: ['today', 'accounts', 'assign_tasks', 'pipeline', 'see_contact', 'edit_leads', 'workshops', 'reports', 'tools', 'playbook'],
+  Facilitator: ['today', 'accounts', 'athletes', 'workshops', 'tools', 'playbook'],
 };
 
 // Which agents' reports each role may read.
@@ -52,18 +55,23 @@ export function effectivePerms(role: Role, grant: string[] = [], revoke: string[
   return PERMS.filter((p) => set.has(p));
 }
 
-export type SectionKey = 'queue' | 'workspace' | 'today' | 'pipeline' | 'schools' | 'reports' | 'decisions' | 'agents' | 'import' | 'account';
-export const SECTIONS: { key: SectionKey; label: string; perm: Perm | null; group: 'Work' | 'Intelligence' | 'Resources' }[] = [
-  { key: 'queue', label: 'My Queue', perm: 'pipeline', group: 'Work' },
-  { key: 'workspace', label: 'My Workspace', perm: null, group: 'Work' },
-  { key: 'today', label: 'Today', perm: 'today', group: 'Work' },
-  { key: 'pipeline', label: 'Pipeline', perm: 'pipeline', group: 'Work' },
-  { key: 'schools', label: 'Schools', perm: 'pipeline', group: 'Work' },
+export type SectionKey =
+  | 'queue' | 'tasks' | 'accounts' | 'drafts' | 'pipeline'
+  | 'today' | 'schools' | 'reports' | 'decisions' | 'agents' | 'import' | 'profile';
+export type SectionGroup = 'Work' | 'Overview' | 'Intelligence' | 'Settings';
+export const SECTIONS: { key: SectionKey; label: string; perm: Perm | null; group: SectionGroup }[] = [
+  { key: 'queue', label: 'My Queue', perm: null, group: 'Work' },
+  { key: 'tasks', label: 'Tasks', perm: 'accounts', group: 'Work' },
+  { key: 'accounts', label: 'Accounts', perm: 'accounts', group: 'Work' },
+  { key: 'drafts', label: 'Drafts', perm: 'accounts', group: 'Work' },
+  { key: 'pipeline', label: 'Leads', perm: 'pipeline', group: 'Work' },
+  { key: 'today', label: 'Dashboard', perm: 'today', group: 'Overview' },
+  { key: 'schools', label: 'Schools', perm: 'pipeline', group: 'Overview' },
   { key: 'reports', label: 'Reports', perm: 'reports', group: 'Intelligence' },
   { key: 'decisions', label: 'Decisions', perm: 'decisions', group: 'Intelligence' },
   { key: 'agents', label: 'Agents', perm: 'agents', group: 'Intelligence' },
-  { key: 'import', label: 'Import', perm: 'import_leads', group: 'Resources' },
-  { key: 'account', label: 'Account', perm: null, group: 'Resources' },
+  { key: 'import', label: 'Import leads', perm: 'import_leads', group: 'Settings' },
+  { key: 'profile', label: 'My profile', perm: null, group: 'Settings' },
 ];
 
 export function sectionsFor(perms: Perm[]) {
@@ -105,28 +113,56 @@ export const PROFILE_KEYS = ['title', 'email', 'phone', 'linkedin', 'instagram',
 export const profileComplete = (p: Profile) => Boolean(p.title && p.email && p.phone);
 export type OsUser = { id: string; name: string; role: Role; perms: Perm[]; profile: Profile };
 
-// My Workspace. An Entry with a date is a task, without a date it is a note.
-// A Message with a date is scheduled, without a date it is a draft. The OS never sends messages.
-export const CHANNELS = ['Email', 'LinkedIn', 'Text', 'Instagram', 'Other'] as const;
-export type WorkItem = {
+// Accounts: customer profiles. Everything else (tasks, notes, messages, updates) lives inside an account.
+// An Entry with a date is a task; without a date it is a note.
+// A Message with a date is scheduled; without one it is a draft. The OS never sends messages.
+export const ACCOUNT_TYPES = ['Athlete', 'Athletic department', 'Collective', 'Agency', 'Professional organization', 'Nonprofit', 'Brand or sponsor', 'Other'] as const;
+export const ACCOUNT_FIELDS_EDIT = ['name', 'account_type', 'brand', 'title', 'organization', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website', 'about'] as const;
+export type Account = {
   id: string;
-  kind: 'Entry' | 'Message';
+  name: string;
+  account_type: string;
+  brand: string;
+  title: string;
+  organization: string;
+  email: string;
+  phone: string;
+  linkedin: string;
+  instagram: string;
+  x: string;
+  tiktok: string;
+  website: string;
+  about: string;
+  lead: string;
+  owner_name: string;
+  created_by: string;
+  created: string;
+};
+export const CHANNELS = ['Email', 'LinkedIn', 'Text', 'Instagram', 'Other'] as const;
+export type Item = {
+  id: string;
+  account: string;
+  kind: 'Entry' | 'Message' | 'Update';
   title: string;
   body: string;
   channel: string;
   to_name: string;
   subject: string;
-  lead: string;
   due_date: string;
   due_time: string;
   status: 'Open' | 'Done' | 'Sent';
-  done_at: string;
+  assignee: string;
+  assignee_name: string;
   created_by: string;
+  created_by_rec: string;
+  done_at: string;
+  done_by: string;
   created: string;
 };
-export const itemLabel = (i: Pick<WorkItem, 'kind' | 'due_date'>) =>
-  i.kind === 'Message' ? (i.due_date ? 'Scheduled message' : 'Draft message') : i.due_date ? 'Task' : 'Note';
-export type Teammate = { id: string; name: string };
+export const isTask = (i: Pick<Item, 'kind' | 'due_date'>) => i.kind === 'Entry' && !!i.due_date;
+export const itemLabel = (i: Pick<Item, 'kind' | 'due_date'>) =>
+  i.kind === 'Update' ? 'Update' : i.kind === 'Message' ? (i.due_date ? 'Scheduled message' : 'Draft message') : i.due_date ? 'Task' : 'Note';
+export type Teammate = { id: string; name: string; canAccounts: boolean };
 
 export type Contact = {
   id: string;
@@ -166,7 +202,8 @@ export type OsData = {
   tiles: Tile[];
   contacts?: Contact[];
   mentions?: Mention[];
-  workspace?: WorkItem[];
+  accounts?: Account[];
+  items?: Item[];
   team?: Teammate[];
   schools?: School[];
   reports?: Report[];

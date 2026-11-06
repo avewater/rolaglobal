@@ -219,3 +219,48 @@ a.aos-chip { color: var(--fg); text-decoration: none; }
   .aos-seg { display: flex; width: 100%; }
   .aos-seg button { flex: 1; padding: 8px 6px; }
 }
+
+/* ---------- App bar with dropdown menu (replaces sidebar and bottom tabs) ---------- */
+.aos-app { min-height: 100vh; }
+.aos-appbar { position: sticky; top: 0; z-index: 40; background: rgba(255, 255, 255, 0.97); border-bottom: 1px solid var(--line); }
+.aos-appbar-in { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 18px; padding: 10px 40px; padding-top: max(10px, env(safe-area-inset-top, 0px)); }
+.aos-appbar .aos-brand { text-decoration: none; font-size: 20px; white-space: nowrap; }
+.aos-appbar-right { margin-left: auto; }
+.aos-app .aos-main { margin: 0 auto; width: 100%; padding-top: 28px; }
+.aos-nav { position: relative; }
+.aos-nav-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--line2); border-radius: 2px; padding: 8px 12px; font-weight: 600; font-size: 14px; }
+.aos-nav-btn:hover, .aos-nav-btn[aria-expanded='true'] { border-color: var(--gold-dk); }
+.aos-nav-icon { color: var(--gold); }
+.aos-nav-caret { color: var(--muted); font-size: 11px; }
+.aos-nav-menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 240px; background: var(--bg); border: 1px solid var(--line2); box-shadow: 0 12px 32px rgba(11, 27, 43, 0.12); padding: 10px; display: grid; gap: 10px; z-index: 60; max-height: calc(100vh - 90px); overflow-y: auto; }
+.aos-nav-group { display: grid; gap: 2px; }
+.aos-nav-group .aos-eyebrow { padding: 4px 10px; }
+.aos-nav-item { text-align: left; background: none; border: 0; padding: 9px 10px; border-radius: 2px; font-size: 15px; }
+.aos-nav-item:hover { background: var(--card); }
+.aos-nav-item[aria-current='page'] { background: var(--card); box-shadow: inset 2px 0 0 var(--gold); font-weight: 600; }
+
+/* Sub dropdowns (Tasks due today / Open / Upcoming / Completed) */
+.aos-sub-select { font-weight: 600; padding: 9px 12px; min-width: 220px; }
+.aos-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.aos-nowrap { flex-wrap: nowrap; }
+.aos-chip-select { background: var(--bg); font: inherit; font-size: 12px; padding: 3px 8px; }
+.aos-th { padding: 10px 12px !important; }
+
+/* Account screen */
+.aos-acct-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.aos-compose { background: var(--card); border: 1px solid var(--line); padding: 16px; display: grid; gap: 14px; border-radius: 2px; }
+.aos-firsttask { background: var(--card); border: 1px solid var(--line); padding: 14px; border-radius: 2px; }
+.aos-notebox { margin: 0; background: #fbf6ea; border: 1px solid #ead9b2; padding: 8px 10px; color: var(--fg); }
+.aos-warntext { color: var(--warn); }
+.aos-update { border-left: 2px solid var(--gold-dk); padding: 8px 0 8px 14px; display: grid; gap: 4px; }
+.aos-update a { color: inherit; }
+
+@media (max-width: 860px) {
+  .aos-appbar-in { padding: 10px 16px; gap: 10px; padding-top: max(10px, env(safe-area-inset-top, 0px)); }
+  .aos-app .aos-main { padding: 20px 16px calc(40px + env(safe-area-inset-bottom, 0px)); }
+  .aos-nav-menu { position: fixed; left: 12px; right: 12px; top: 58px; min-width: 0; }
+  .aos-acct-head { flex-direction: column; }
+  .aos-sub-select { min-width: 0; width: 100%; }
+  .aos-sub { flex: 1 1 100%; }
+  .aos-toast { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+}

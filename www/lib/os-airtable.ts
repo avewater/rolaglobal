@@ -11,7 +11,8 @@ export const OS_TABLES = {
   inquiries: 'tbltNDu34zkYb86gA',
   athletes: 'tblZIj9HNAE4Sgq2m',
   activity: 'tbl2qnsmqNVDtzhfZ',
-  workspace: 'tblDrgTV0SY7SwsW2',
+  accounts: 'tbl2nGeTWCwOcpNTY',
+  items: 'tbl4rTnvpadx2OGBx',
 } as const;
 
 export type AirtableRecord = { id: string; createdTime: string; fields: Record<string, unknown> };

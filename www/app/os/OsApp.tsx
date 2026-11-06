@@ -1,17 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ApiError, ImportView, LeadDrawer, MoveDialog, Pipeline, Queue, api, type Crm } from './crm';
-import { ItemCard, ItemEditor, ProfileForm, Workspace, localToday, type Ws } from './workspace';
+import { AccountsView, DraftsView, DueForMe, TasksView, type Acx } from './accounts';
+import { ProfileForm } from './profile';
 import {
   REASON_STAGES,
   SAMPLE_FLOOR,
   isOpenStage,
   sectionsFor,
+  type Account,
   type Contact,
+  type Item,
   type OsData,
   type OsUser,
-  type WorkItem,
   type SectionKey,
   type Tile,
 } from '@/lib/os-roles';
@@ -22,14 +24,16 @@ export default function OsApp() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [data, setData] = useState<OsData | null>(null);
   const [error, setError] = useState('');
-  const [section, setSection] = useState<SectionKey>('today');
+  const [section, setSection] = useState<SectionKey>('queue');
+  const [sub, setSub] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [leads, setLeads] = useState<Contact[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [moving, setMoving] = useState<{ lead: Contact; stage: string } | null>(null);
   const [toast, setToast] = useState('');
-  const [items, setItemsState] = useState<WorkItem[]>([]);
-  const [composing, setComposing] = useState<{ kind: 'Entry' | 'Message'; lead: Contact } | null>(null);
+  const [prefill, setPrefill] = useState<Contact | null>(null);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -43,7 +47,8 @@ export default function OsApp() {
       if (!res.ok) throw new Error(json.error || 'The OS could not load.');
       setData(json);
       setLeads(json.contacts ?? []);
-      setItemsState(json.workspace ?? []);
+      setAccounts(json.accounts ?? []);
+      setItems(json.items ?? []);
       setPhase('ready');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'The OS could not load.');
@@ -60,12 +65,17 @@ export default function OsApp() {
 
   const sections = useMemo(() => (data ? sectionsFor(data.user.perms) : []), [data]);
 
-  // The current section lives in the URL hash, so back and shared links work.
+  // The current screen lives in the URL hash (#accounts/rec...), so back, refresh and shared links work.
   useEffect(() => {
     const read = () => {
-      const h = window.location.hash.slice(1) as SectionKey;
-      if (sections.some((s) => s.key === h)) setSection(h);
-      else if (sections.length) setSection(sections[0].key);
+      const [h, rest] = window.location.hash.slice(1).split('/') as [SectionKey, string?];
+      if (sections.some((s) => s.key === h)) {
+        setSection(h);
+        setSub(rest && /^rec[A-Za-z0-9]{14}$/.test(rest) ? rest : '');
+      } else if (sections.length) {
+        setSection(sections[0].key);
+        setSub('');
+      }
     };
     read();
     window.addEventListener('hashchange', read);
@@ -79,6 +89,11 @@ export default function OsApp() {
   }, [toast]);
 
   const patch = useCallback((l: Contact) => setLeads((xs) => xs.map((x) => (x.id === l.id ? { ...x, ...l } : x))), []);
+
+  const go = useCallback((key: SectionKey, subId?: string) => {
+    window.location.hash = subId ? `${key}/${subId}` : key;
+    window.scrollTo({ top: 0 });
+  }, []);
 
   // A stage move goes straight through when the rules allow it, otherwise it asks for what is missing.
   const move = useCallback(
@@ -106,6 +121,7 @@ export default function OsApp() {
     [data?.user.role, patch],
   );
 
+  const canAccounts = !!data?.user.perms.includes('accounts');
   const crm: Crm | null = data
     ? {
         user: data.user,
@@ -119,32 +135,28 @@ export default function OsApp() {
         move,
         notify: setToast,
         reload: load,
-        compose: (kind, lead) => setComposing({ kind, lead }),
+        accountFor: canAccounts ? (leadId) => accounts.find((a) => a.lead === leadId) : undefined,
+        toAccount: canAccounts
+          ? (lead, existing) => {
+              setOpenId(null);
+              if (existing) go('accounts', existing.id);
+              else {
+                setPrefill(lead);
+                go('accounts');
+              }
+            }
+          : undefined,
       }
     : null;
 
-  const ws: Ws | null = data
-    ? {
-        user: data.user,
-        items,
-        setItems: (fn) => setItemsState(fn),
-        leads,
-        team: data.team ?? [],
-        notify: setToast,
-        patchLead: patch,
-        openLead: setOpenId,
-      }
+  const cx: Acx | null = data
+    ? { user: data.user, accounts, items, team: data.team ?? [], leads, setAccounts, setItems, notify: setToast, go, openLead: setOpenId }
     : null;
   const setUser = (u: OsUser) => setData((d) => (d ? { ...d, user: u } : d));
 
-  const go = (key: SectionKey) => {
-    window.location.hash = key;
-    window.scrollTo({ top: 0 });
-  };
-
   if (phase === 'loading') return <div className="aos-center aos-muted">Loading</div>;
   if (phase === 'signed_out') return <SignIn onDone={load} />;
-  if (phase === 'error' || !data || !crm || !ws)
+  if (phase === 'error' || !data || !crm || !cx)
     return (
       <div className="aos-center">
         <div className="aos-stack">
@@ -154,53 +166,42 @@ export default function OsApp() {
       </div>
     );
 
-  const groups = ['Work', 'Intelligence', 'Resources'] as const;
-  const tabs = sections.slice(0, 4);
+  const current = sections.find((s) => s.key === section);
+  const subAccount = section === 'accounts' && sub ? accounts.find((a) => a.id === sub) : undefined;
 
   return (
-    <div className="aos-shell">
-      <aside className="aos-side" aria-label="Sections">
-        <div className="aos-brand">ROLA <span>OS</span></div>
-        {groups.map((g) => {
-          const items = sections.filter((s) => s.group === g);
-          if (!items.length) return null;
-          return (
-            <nav key={g} className="aos-side-group">
-              <div className="aos-eyebrow">{g}</div>
-              {items.map((s) => (
-                <button key={s.key} className="aos-side-link" aria-current={section === s.key ? 'page' : undefined} onClick={() => go(s.key)}>
-                  {s.label}
-                </button>
-              ))}
-            </nav>
-          );
-        })}
-      </aside>
+    <div className="aos-app">
+      <header className="aos-appbar">
+        <div className="aos-appbar-in">
+          <a className="aos-brand" href="#queue">ROLA <span>OS</span></a>
+          <NavMenu sections={sections} current={section} go={go} />
+          <div className="aos-appbar-right">
+            <button className="aos-ghost" onClick={load} disabled={refreshing}>{refreshing ? 'Refreshing' : 'Refresh'}</button>
+          </div>
+        </div>
+      </header>
 
       <main className="aos-main">
-        <header className="aos-top">
-          <h1 className="aos-h1">{sections.find((s) => s.key === section)?.label}</h1>
-          <button className="aos-ghost" onClick={load} disabled={refreshing}>
-            {refreshing ? 'Refreshing' : 'Refresh'}
-          </button>
-        </header>
+        <h1 className="aos-h1">{subAccount ? subAccount.name : current?.label}</h1>
         {data.errors.length > 0 && <div className="aos-banner">Could not load: {data.errors.join(', ')}. The rest is current.</div>}
 
         {section === 'queue' && (
-          <>
-            <DueWork ws={ws} go={go} />
-            <Queue crm={crm} />
-          </>
+          <div className="aos-stack-lg">
+            {canAccounts && <DueForMe cx={cx} />}
+            {data.user.perms.includes('pipeline') && <Queue crm={crm} />}
+          </div>
         )}
-        {section === 'workspace' && <Workspace ws={ws} />}
-        {section === 'today' && <Today data={data} go={go} />}
+        {section === 'tasks' && <TasksView cx={cx} />}
+        {section === 'accounts' && <AccountsView cx={cx} sub={sub} prefill={prefill} clearPrefill={() => setPrefill(null)} />}
+        {section === 'drafts' && <DraftsView cx={cx} />}
         {section === 'pipeline' && <Pipeline crm={crm} />}
+        {section === 'today' && <Today data={data} go={go} />}
         {section === 'import' && <ImportView crm={crm} />}
         {section === 'schools' && <Schools data={data} />}
         {section === 'reports' && <Reports data={data} />}
         {section === 'decisions' && <Decisions data={data} />}
         {section === 'agents' && <Agents data={data} />}
-        {section === 'account' && <Account data={data} onSaved={setUser} notify={setToast} />}
+        {section === 'profile' && <ProfileSection data={data} onSaved={setUser} notify={setToast} />}
       </main>
 
       {openId && <LeadDrawer key={openId} id={openId} crm={crm} onClose={() => setOpenId(null)} />}
@@ -216,17 +217,62 @@ export default function OsApp() {
           }}
         />
       )}
-      {composing && <ItemEditor ws={ws} kind={composing.kind} lead={composing.lead} onClose={() => setComposing(null)} />}
       {toast && <div className="aos-toast" role="status">{toast}</div>}
+    </div>
+  );
+}
 
-      <nav className="aos-tabs" aria-label="Sections">
-        {tabs.map((s) => (
-          <button key={s.key} aria-current={section === s.key ? 'page' : undefined} onClick={() => go(s.key)}>
-            {s.label}
-          </button>
-        ))}
-        <MoreMenu sections={sections.slice(4)} current={section} go={go} />
-      </nav>
+// The main menu: one dropdown with every screen this person can open.
+function NavMenu({ sections, current, go }: { sections: ReturnType<typeof sectionsFor>; current: SectionKey; go: (k: SectionKey) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open]);
+  const groups = ['Work', 'Overview', 'Intelligence', 'Settings'] as const;
+  const label = sections.find((s) => s.key === current)?.label || 'Menu';
+  return (
+    <div className="aos-nav" ref={ref}>
+      <button className="aos-nav-btn" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <span className="aos-nav-icon" aria-hidden>☰</span>
+        {label}
+        <span aria-hidden className="aos-nav-caret">▾</span>
+      </button>
+      {open && (
+        <div className="aos-nav-menu" role="menu">
+          {groups.map((g) => {
+            const list = sections.filter((s) => s.group === g);
+            if (!list.length) return null;
+            return (
+              <div key={g} className="aos-nav-group" role="group" aria-label={g}>
+                <div className="aos-eyebrow">{g}</div>
+                {list.map((s) => (
+                  <button
+                    key={s.key}
+                    role="menuitem"
+                    className="aos-nav-item"
+                    aria-current={s.key === current ? 'page' : undefined}
+                    onClick={() => {
+                      setOpen(false);
+                      go(s.key);
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -260,29 +306,6 @@ function SignIn({ onDone }: { onDone: () => void }) {
         <p className="aos-muted aos-small">Michael issues passkeys. Ask him if you need one.</p>
       </form>
     </div>
-  );
-}
-
-function MoreMenu({ sections, current, go }: { sections: ReturnType<typeof sectionsFor>; current: SectionKey; go: (k: SectionKey) => void }) {
-  const [open, setOpen] = useState(false);
-  if (!sections.length) return null;
-  return (
-    <>
-      <button aria-expanded={open} aria-current={sections.some((s) => s.key === current) ? 'page' : undefined} onClick={() => setOpen((o) => !o)}>
-        More
-      </button>
-      {open && (
-        <div className="aos-sheet" role="dialog" aria-label="More sections" onClick={() => setOpen(false)}>
-          <div className="aos-sheet-body" onClick={(e) => e.stopPropagation()}>
-            {sections.map((s) => (
-              <button key={s.key} className="aos-side-link" onClick={() => { setOpen(false); go(s.key); }}>
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </>
   );
 }
 
@@ -424,23 +447,7 @@ function Agents({ data }: { data: OsData }) {
   );
 }
 
-function DueWork({ ws, go }: { ws: Ws; go: (k: SectionKey) => void }) {
-  const today = localToday();
-  const due = ws.items
-    .filter((i) => i.status === 'Open' && i.due_date && i.due_date <= today)
-    .sort((a, b) => `${a.due_date}${a.due_time || '99'}`.localeCompare(`${b.due_date}${b.due_time || '99'}`));
-  return (
-    <section className="aos-stack">
-      <div className="aos-row-head">
-        <div className="aos-eyebrow">My tasks and messages due <span className="aos-count">{due.length}</span></div>
-        <button className="aos-ghost" onClick={() => go('workspace')}>Open workspace</button>
-      </div>
-      {due.length ? due.map((i) => <ItemCard key={i.id} item={i} ws={ws} today={today} compact />) : <p className="aos-muted aos-small">Nothing due from your workspace.</p>}
-    </section>
-  );
-}
-
-function Account({ data, onSaved, notify }: { data: OsData; onSaved: (u: OsUser) => void; notify: (m: string) => void }) {
+function ProfileSection({ data, onSaved, notify }: { data: OsData; onSaved: (u: OsUser) => void; notify: (m: string) => void }) {
   const signOut = async () => {
     await fetch('/api/os/logout', { method: 'POST' });
     window.location.hash = '';
