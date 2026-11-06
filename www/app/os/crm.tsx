@@ -629,6 +629,20 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
               </section>
             )}
 
+            {lead.draft_message && (
+              <section className="aos-stack">
+                <div className="aos-eyebrow">Drafted first message</div>
+                <div className="aos-draft">
+                  {lead.draft_subject && <div className="aos-row-title">{lead.draft_subject}</div>}
+                  <div className="aos-body aos-small">{lead.draft_message.split('{my_name}').join(crm.user.name.split(' ')[0])}</div>
+                </div>
+                <div className="aos-chips">
+                  <CopyBtn value={[lead.draft_subject ? `Subject: ${lead.draft_subject}` : '', lead.draft_message.split('{my_name}').join(crm.user.name.split(' ')[0])].filter(Boolean).join('\n\n')} label="Copy message" />
+                  {lead.grade === 'A' && <Pill tone="warn">Grade A: Michael approves before sending</Pill>}
+                </div>
+              </section>
+            )}
+
             <section className="aos-stack">
               <div className="aos-eyebrow">Contact</div>
               {lead.source === 'Online lead' && lead.stage === 'New' && <p className="aos-notebox aos-small">Found online by the lead finder. Open the source page and confirm the person, title and contact details before moving this lead forward.</p>}
@@ -641,6 +655,7 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
               <dl className="aos-dl">
                 {lead.warm_path && <><dt>{lead.source === 'Referral' ? 'Referred by' : 'Warm path'}</dt><dd>{lead.warm_path}</dd></>}
                 {lead.fit_reason && <><dt>Why they fit</dt><dd>{lead.fit_reason}</dd></>}
+                {lead.notes && <><dt>Research notes</dt><dd className="aos-body">{lead.notes}</dd></>}
                 {lead.found_url && <><dt>Found at</dt><dd><a href={lead.found_url} target="_blank" rel="noopener noreferrer">{(() => { try { return new URL(lead.found_url).hostname.replace(/^www\./, ''); } catch { return 'Source page'; } })()}</a>{lead.found_on ? ` on ${fmtDate(lead.found_on)}` : ''}</dd></>}
                 {lead.athlete_reach > 0 && <><dt>Athlete reach</dt><dd>{lead.athlete_reach.toLocaleString()}</dd></>}
                 {lead.last_touch && <><dt>Last touch</dt><dd>{fmtDate(lead.last_touch)}</dd></>}
@@ -684,7 +699,7 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
 
 function EditLead({ lead, crm, onClose, onSaved }: { lead: Contact; crm: Crm; onClose: () => void; onSaved: (l: Contact) => void }) {
   const init = {
-    name: lead.name, title: lead.title, organization: lead.organization, owner: lead.owner, grade: lead.grade, source: lead.source, host_type: lead.host_type, fit_reason: lead.fit_reason,
+    name: lead.name, title: lead.title, organization: lead.organization, owner: lead.owner, grade: lead.grade, source: lead.source, host_type: lead.host_type, fit_reason: lead.fit_reason, draft_subject: lead.draft_subject, draft_message: lead.draft_message,
     warm_path: lead.warm_path, athlete_reach: lead.athlete_reach ? String(lead.athlete_reach) : '', next_action: lead.next_action,
     next_action_due: lead.next_action_due, linkedin_url: lead.linkedin_url, email: lead.email ?? '', phone: lead.phone ?? '', pinned_note: lead.pinned_note,
   };
@@ -722,6 +737,8 @@ function EditLead({ lead, crm, onClose, onSaved }: { lead: Contact; crm: Crm; on
           <label className="aos-field"><span>Athlete reach (estimate)</span><input className="aos-input" inputMode="numeric" value={f.athlete_reach} onChange={set('athlete_reach')} /></label>
           <label className="aos-field aos-span2"><span>{f.source === 'Referral' ? 'Referred by' : 'Warm path'}</span><input className="aos-input" value={f.warm_path} onChange={set('warm_path')} placeholder={f.source === 'Referral' ? 'Who referred them, and how they know them' : 'Who can introduce us, and how'} /></label>
           <label className="aos-field aos-span2"><span>Why they fit</span><textarea className="aos-input" rows={2} value={f.fit_reason} onChange={set('fit_reason')} maxLength={2000} /></label>
+          <label className="aos-field aos-span2"><span>First message subject</span><input className="aos-input" value={f.draft_subject} onChange={set('draft_subject')} maxLength={200} /></label>
+          <label className="aos-field aos-span2"><span>First message (sign it {'{my_name}'} and it fills in your name when copied)</span><textarea className="aos-input" rows={6} value={f.draft_message} onChange={set('draft_message')} maxLength={4000} /></label>
           <label className="aos-field"><span>Next action{open ? ' (required)' : ''}</span><input className="aos-input" value={f.next_action} onChange={set('next_action')} required={open} /></label>
           <label className="aos-field"><span>Date{open ? ' (required)' : ''}</span><input className="aos-input" type="date" value={f.next_action_due} onChange={set('next_action_due')} required={open} /></label>
           {seeContact && <label className="aos-field"><span>Email</span><input className="aos-input" type="email" value={f.email} onChange={set('email')} /></label>}

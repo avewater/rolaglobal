@@ -264,3 +264,4 @@ a.aos-chip { color: var(--fg); text-decoration: none; }
   .aos-sub { flex: 1 1 100%; }
   .aos-toast { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
 }
+.aos-draft { background: var(--card); border: 1px solid var(--line); padding: 12px 14px; display: grid; gap: 6px; border-radius: 2px; }

@@ -85,6 +85,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       };
       ['name', 'title', 'organization', 'warm_path', 'next_action'].forEach((k) => text(k));
       text('fit_reason', 2000);
+      text('draft_subject', 200);
+      text('draft_message', 4000);
       text('pinned_note', 2000);
       if ('linkedin_url' in inF) {
         const u = String(inF.linkedin_url || '').trim();

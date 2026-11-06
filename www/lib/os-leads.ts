@@ -5,7 +5,7 @@ import { LEAD_STAGES, LEGACY_STAGE, OWNERS, type Activity, type Contact } from '
 export const todayET = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 
 export const LEAD_FIELDS = [
-  'name', 'title', 'organization', 'institution', 'pipeline_stage', 'stage', 'grade', 'lead_owner', 'owner', 'source', 'lead_source', 'host_type', 'found_url', 'fit_reason', 'found_on',
+  'name', 'title', 'organization', 'institution', 'pipeline_stage', 'stage', 'grade', 'lead_owner', 'owner', 'source', 'lead_source', 'host_type', 'found_url', 'fit_reason', 'found_on', 'draft_subject', 'draft_message', 'notes',
   'channel', 'warm_path', 'athlete_reach', 'next_action', 'next_action_due', 'last_touch', 'stage_changed_at', 'pinned_note',
   'disposition_reason', 'do_not_contact', 'linkedin_url',
 ];
@@ -31,6 +31,9 @@ export function readLead(r: AirtableRecord, seeContact: boolean, instName?: Map<
     found_url: str(f.found_url),
     fit_reason: str(f.fit_reason),
     found_on: str(f.found_on),
+    draft_subject: str(f.draft_subject),
+    draft_message: str(f.draft_message),
+    notes: str(f.notes),
     channel: str(f.channel),
     warm_path: str(f.warm_path),
     athlete_reach: num(f.athlete_reach),

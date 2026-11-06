@@ -178,6 +178,9 @@ export type Contact = {
   found_url: string;
   fit_reason: string;
   found_on: string;
+  draft_subject: string;
+  draft_message: string;
+  notes: string;
   channel: string;
   warm_path: string;
   athlete_reach: number;
