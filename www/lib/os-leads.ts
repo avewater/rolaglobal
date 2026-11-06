@@ -5,7 +5,7 @@ import { LEAD_STAGES, LEGACY_STAGE, OWNERS, type Activity, type Contact } from '
 export const todayET = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 
 export const LEAD_FIELDS = [
-  'name', 'title', 'organization', 'institution', 'pipeline_stage', 'stage', 'grade', 'lead_owner', 'owner', 'source',
+  'name', 'title', 'organization', 'institution', 'pipeline_stage', 'stage', 'grade', 'lead_owner', 'owner', 'source', 'lead_source', 'host_type', 'found_url', 'fit_reason', 'found_on',
   'channel', 'warm_path', 'athlete_reach', 'next_action', 'next_action_due', 'last_touch', 'stage_changed_at', 'pinned_note',
   'disposition_reason', 'do_not_contact', 'linkedin_url',
 ];
@@ -25,7 +25,12 @@ export function readLead(r: AirtableRecord, seeContact: boolean, instName?: Map<
     stage,
     grade: str(f.grade),
     owner: str(f.lead_owner) || (oldOwner === 'VA' ? 'Rein' : oldOwner === 'Ladi' ? 'Hussain' : oldOwner),
-    source: str(f.source),
+    // Older rows used one "source" list that mixed channel and organization type.
+    source: str(f.lead_source) || ({ 'Inbound form': 'Inbound form', Referral: 'Referral', LinkedIn: 'LinkedIn', Event: 'Event' } as Record<string, string>)[str(f.source)] || '',
+    host_type: str(f.host_type) || ({ SAAC: 'SAAC', Collective: 'Collective', AD: 'Athletic department', Program: 'Sports management program' } as Record<string, string>)[str(f.source)] || '',
+    found_url: str(f.found_url),
+    fit_reason: str(f.fit_reason),
+    found_on: str(f.found_on),
     channel: str(f.channel),
     warm_path: str(f.warm_path),
     athlete_reach: num(f.athlete_reach),

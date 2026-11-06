@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OS_TABLES, createRecords, listAll, str } from '@/lib/os-airtable';
 import { todayET } from '@/lib/os-leads';
 import { can, getUser } from '@/lib/os-session';
-import { DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES } from '@/lib/os-roles';
+import { DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES, HOST_TYPES } from '@/lib/os-roles';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -64,7 +64,8 @@ export async function POST(req: NextRequest) {
       ...(stage === 'Do Not Contact' ? { do_not_contact: true } : {}),
       ...(closedWithReason ? { disposition_reason: ci(t(r.disposition_reason), DISPOSITION_REASONS) || 'Other' } : {}),
       ...(ci(t(r.grade), GRADES) ? { grade: ci(t(r.grade), GRADES) } : {}),
-      ...(ci(t(r.source), SOURCES) ? { source: ci(t(r.source), SOURCES) } : {}),
+      lead_source: ci(t(r.source), SOURCES) || 'Import',
+      ...(ci(t(r.host_type), HOST_TYPES) ? { host_type: ci(t(r.host_type), HOST_TYPES) } : {}),
       lead_owner: ci(t(r.owner), OWNERS) || 'Rein',
       ...(t(r.warm_path) ? { warm_path: t(r.warm_path) } : {}),
       ...(reach > 0 ? { athlete_reach: Math.round(reach) } : {}),

@@ -88,7 +88,9 @@ export const isOpenStage = (s: string) => !CLOSED_STAGES.includes(s);
 export const SEND_STAGES: readonly string[] = ['Approved', 'Touch 1', 'Touch 2', 'Touch 3'];
 export const DISPOSITION_REASONS = ['Not interested', 'Wrong person', 'No response', 'Not a fit', 'Other'] as const;
 export const GRADES = ['A', 'B', 'C'] as const;
-export const SOURCES = ['SAAC', 'Collective', 'Program', 'AD', 'Inbound form', 'Referral', 'LinkedIn', 'Event', 'Other'] as const;
+// Source: how the lead reached us. Host type: what kind of organization they are with.
+export const SOURCES = ['Online lead', 'Referral', 'Inbound form', 'LinkedIn', 'Event', 'Import', 'Other'] as const;
+export const HOST_TYPES = ['SAAC', 'Athletic department', 'Collective', 'Agency', 'Campus organization', 'Sports management program', 'Professional organization', 'Nonprofit', 'Other'] as const;
 export const OWNERS = ['Michael', 'Rein', 'Sid', 'Hussain'] as const;
 export const LOG_TYPES = ['Email logged', 'LinkedIn logged', 'Call logged', 'Reply received'] as const;
 export const ACTIVITY_TYPES = ['Stage change', 'Comment', 'Email logged', 'LinkedIn logged', 'Call logged', 'Reply received', 'Note', 'Import'] as const;
@@ -172,6 +174,10 @@ export type Contact = {
   grade: string;
   owner: string;
   source: string;
+  host_type: string;
+  found_url: string;
+  fit_reason: string;
+  found_on: string;
   channel: string;
   warm_path: string;
   athlete_reach: number;

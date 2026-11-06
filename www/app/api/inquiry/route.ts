@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
         organization: org,
         channel: 'Email',
         pipeline_stage: 'Replied',
-        source: 'Inbound form',
+        lead_source: 'Inbound form',
         lead_owner: 'Michael',
         stage_changed_at: todayLA(),
         next_action: 'Send private briefing',

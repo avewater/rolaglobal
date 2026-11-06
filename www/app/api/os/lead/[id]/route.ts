@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OS_TABLES, formulaString, getRecord, listAll, updateRecord } from '@/lib/os-airtable';
 import { logActivity, readActivity, readLead, todayET } from '@/lib/os-leads';
 import { can, getUser } from '@/lib/os-session';
-import { DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES, isOpenStage } from '@/lib/os-roles';
+import { DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES, HOST_TYPES, isOpenStage } from '@/lib/os-roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,6 +84,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
         if (k in inF) out[k] = typeof inF[k] === 'string' ? inF[k].trim().slice(0, max) : '';
       };
       ['name', 'title', 'organization', 'warm_path', 'next_action'].forEach((k) => text(k));
+      text('fit_reason', 2000);
       text('pinned_note', 2000);
       if ('linkedin_url' in inF) {
         const u = String(inF.linkedin_url || '').trim();
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
         out[target] = inF[k];
         return true;
       };
-      if (!sel('grade', 'grade', GRADES) || !sel('owner', 'lead_owner', OWNERS) || !sel('source', 'source', SOURCES))
+      if (!sel('grade', 'grade', GRADES) || !sel('owner', 'lead_owner', OWNERS) || !sel('source', 'lead_source', SOURCES) || !sel('host_type', 'host_type', HOST_TYPES))
         return bad('One of the choices is not on the list.');
       if (can(user, 'see_contact')) {
         if ('email' in inF) {

@@ -11,6 +11,7 @@ import {
   OWNERS,
   REASON_STAGES,
   SOURCES,
+  HOST_TYPES,
   isOpenStage,
   ownerFor,
   type Account,
@@ -114,10 +115,12 @@ export function Queue({ crm }: { crm: Crm }) {
   const t = todayET();
   const pool = crm.leads.filter((l) => isOpenStage(l.stage) && (scope === 'all' || l.owner === me));
   const byDue = (a: Contact, b: Contact) => (a.next_action_due || '9999').localeCompare(b.next_action_due || '9999');
-  const overdue = pool.filter((l) => l.next_action_due && l.next_action_due < t && l.stage !== 'Replied').sort(byDue);
-  const dueToday = pool.filter((l) => l.next_action_due === t && l.stage !== 'Replied');
+  const isFound = (l: Contact) => l.source === 'Online lead' && l.stage === 'New';
+  const overdue = pool.filter((l) => l.next_action_due && l.next_action_due < t && l.stage !== 'Replied' && !isFound(l)).sort(byDue);
+  const dueToday = pool.filter((l) => l.next_action_due === t && l.stage !== 'Replied' && !isFound(l));
   const replies = pool.filter((l) => l.stage === 'Replied').sort(byDue);
   const missing = pool.filter((l) => !l.next_action || !l.next_action_due);
+  const found = pool.filter(isFound);
 
   const Row = ({ l }: { l: Contact }) => (
     <button className="aos-row aos-row-btn" onClick={() => crm.open(l.id)}>
@@ -149,6 +152,7 @@ export function Queue({ crm }: { crm: Crm }) {
         </div>
       </div>
       <Group title="Replies waiting" items={replies} empty="No replies waiting." />
+      {found.length > 0 && <Group title="New online leads to verify" items={found} empty="" />}
       <Group title="Overdue" items={overdue} empty="Nothing overdue." />
       <Group title="Due today" items={dueToday} empty="Nothing else due today." />
       {missing.length > 0 && <Group title="Missing a next action" items={missing} empty="" />}
@@ -182,6 +186,7 @@ export function Pipeline({ crm }: { crm: Crm }) {
   const [view, setView] = useState<'board' | 'list'>(() => (typeof window !== 'undefined' && (store.get('os.view') as 'board' | 'list')) || 'board');
   const [q, setQ] = useState('');
   const [owner, setOwner] = useState('');
+  const [source, setSource] = useState('');
   const [showClosed, setShowClosed] = useState(false);
   const [sort, setSort] = useState<{ k: SortKey; dir: 1 | -1 }>({ k: 'next_action_due', dir: 1 });
   const [adding, setAdding] = useState(false);
@@ -195,9 +200,10 @@ export function Pipeline({ crm }: { crm: Crm }) {
     return crm.leads.filter(
       (l) =>
         (!owner || l.owner === owner) &&
+        (!source || l.source === source) &&
         (!needle || [l.name, l.organization, l.institution, l.title, l.email].some((v) => (v || '').toLowerCase().includes(needle))),
     );
-  }, [crm.leads, owner, q]);
+  }, [crm.leads, owner, source, q]);
 
   const stages = showClosed ? LEAD_STAGES : LEAD_STAGES.filter((s) => !CLOSED_STAGES.includes(s));
   const closedCount = leads.filter((l) => CLOSED_STAGES.includes(l.stage)).length;
@@ -224,6 +230,10 @@ export function Pipeline({ crm }: { crm: Crm }) {
           <button aria-pressed={view === 'list'} onClick={() => setView('list')}>List</button>
         </div>
         <input className="aos-input aos-search" type="search" placeholder="Search name, organization, email" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search leads" />
+        <select className="aos-input" value={source} onChange={(e) => setSource(e.target.value)} aria-label="Source">
+          <option value="">All sources</option>
+          {SOURCES.map((o) => <option key={o}>{o}</option>)}
+        </select>
         <select className="aos-input" value={owner} onChange={(e) => setOwner(e.target.value)} aria-label="Owner">
           <option value="">All owners</option>
           {OWNERS.map((o) => <option key={o}>{o}</option>)}
@@ -422,7 +432,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 
 function NewLead({ crm, onClose }: { crm: Crm; onClose: () => void }) {
   const me = ownerFor(crm.user.name);
-  const [f, setF] = useState({ name: '', organization: '', title: '', email: '', grade: '', source: '', owner: me || 'Michael', next_action: 'Research lead', next_action_due: todayET() });
+  const [f, setF] = useState({ name: '', organization: '', title: '', email: '', grade: '', source: '', host_type: '', warm_path: '', owner: me || 'Michael', next_action: 'Research lead', next_action_due: todayET() });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((x) => ({ ...x, [k]: e.target.value }));
@@ -452,6 +462,9 @@ function NewLead({ crm, onClose }: { crm: Crm; onClose: () => void }) {
           <Sel label="Owner" value={f.owner} onChange={set('owner')} opts={OWNERS} />
           <Sel label="Grade" value={f.grade} onChange={set('grade')} opts={GRADES} blank />
           <Sel label="Source" value={f.source} onChange={set('source')} opts={SOURCES} blank />
+          <Sel label="Host type" value={f.host_type} onChange={set('host_type')} opts={HOST_TYPES} blank />
+          <Sel label="Host type" value={f.host_type} onChange={set('host_type')} opts={HOST_TYPES} blank />
+          <label className="aos-field"><span>{f.source === 'Referral' ? 'Referred by' : 'Warm path'}</span><input className="aos-input" value={f.warm_path} onChange={set('warm_path')} placeholder={f.source === 'Referral' ? 'Who referred them' : 'Who can introduce us'} /></label>
           <label className="aos-field"><span>Next action</span><input className="aos-input" value={f.next_action} onChange={set('next_action')} required /></label>
           <label className="aos-field"><span>Date</span><input className="aos-input" type="date" value={f.next_action_due} onChange={set('next_action_due')} required /></label>
         </div>
@@ -556,7 +569,8 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
                 <Pill tone={stageTone(lead.stage)}>{lead.stage}</Pill>
                 {lead.grade && <Pill>Grade {lead.grade}</Pill>}
                 {lead.owner && <Pill>{lead.owner}</Pill>}
-                {lead.source && <Pill>{lead.source}</Pill>}
+                {lead.source && <Pill tone={lead.source === 'Online lead' ? 'warn' : 'neutral'}>{lead.source}</Pill>}
+                {lead.host_type && <Pill>{lead.host_type}</Pill>}
                 {lead.dnc && <Pill tone="bad">Do not contact</Pill>}
                 {lead.disposition_reason && !isOpenStage(lead.stage) && <Pill>{lead.disposition_reason}</Pill>}
               </div>
@@ -617,6 +631,7 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
 
             <section className="aos-stack">
               <div className="aos-eyebrow">Contact</div>
+              {lead.source === 'Online lead' && lead.stage === 'New' && <p className="aos-notebox aos-small">Found online by the lead finder. Open the source page and confirm the person, title and contact details before moving this lead forward.</p>}
               <div className="aos-chips">
                 {lead.email && <CopyBtn value={lead.email} label={`Copy ${lead.email}`} />}
                 {lead.phone && <CopyBtn value={lead.phone} label={`Copy ${lead.phone}`} />}
@@ -624,7 +639,9 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
                 {!lead.email && !lead.phone && !lead.linkedin_url && <span className="aos-muted aos-small">No contact details yet.</span>}
               </div>
               <dl className="aos-dl">
-                {lead.warm_path && <><dt>Warm path</dt><dd>{lead.warm_path}</dd></>}
+                {lead.warm_path && <><dt>{lead.source === 'Referral' ? 'Referred by' : 'Warm path'}</dt><dd>{lead.warm_path}</dd></>}
+                {lead.fit_reason && <><dt>Why they fit</dt><dd>{lead.fit_reason}</dd></>}
+                {lead.found_url && <><dt>Found at</dt><dd><a href={lead.found_url} target="_blank" rel="noopener noreferrer">{(() => { try { return new URL(lead.found_url).hostname.replace(/^www\./, ''); } catch { return 'Source page'; } })()}</a>{lead.found_on ? ` on ${fmtDate(lead.found_on)}` : ''}</dd></>}
                 {lead.athlete_reach > 0 && <><dt>Athlete reach</dt><dd>{lead.athlete_reach.toLocaleString()}</dd></>}
                 {lead.last_touch && <><dt>Last touch</dt><dd>{fmtDate(lead.last_touch)}</dd></>}
                 {lead.stage_changed_at && <><dt>In stage since</dt><dd>{fmtDate(lead.stage_changed_at)}</dd></>}
@@ -667,7 +684,7 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
 
 function EditLead({ lead, crm, onClose, onSaved }: { lead: Contact; crm: Crm; onClose: () => void; onSaved: (l: Contact) => void }) {
   const init = {
-    name: lead.name, title: lead.title, organization: lead.organization, owner: lead.owner, grade: lead.grade, source: lead.source,
+    name: lead.name, title: lead.title, organization: lead.organization, owner: lead.owner, grade: lead.grade, source: lead.source, host_type: lead.host_type, fit_reason: lead.fit_reason,
     warm_path: lead.warm_path, athlete_reach: lead.athlete_reach ? String(lead.athlete_reach) : '', next_action: lead.next_action,
     next_action_due: lead.next_action_due, linkedin_url: lead.linkedin_url, email: lead.email ?? '', phone: lead.phone ?? '', pinned_note: lead.pinned_note,
   };
@@ -703,7 +720,8 @@ function EditLead({ lead, crm, onClose, onSaved }: { lead: Contact; crm: Crm; on
           <Sel label="Grade" value={f.grade} onChange={set('grade')} opts={GRADES} blank />
           <Sel label="Source" value={f.source} onChange={set('source')} opts={SOURCES} blank />
           <label className="aos-field"><span>Athlete reach (estimate)</span><input className="aos-input" inputMode="numeric" value={f.athlete_reach} onChange={set('athlete_reach')} /></label>
-          <label className="aos-field aos-span2"><span>Warm path</span><input className="aos-input" value={f.warm_path} onChange={set('warm_path')} placeholder="Who can introduce us, and how" /></label>
+          <label className="aos-field aos-span2"><span>{f.source === 'Referral' ? 'Referred by' : 'Warm path'}</span><input className="aos-input" value={f.warm_path} onChange={set('warm_path')} placeholder={f.source === 'Referral' ? 'Who referred them, and how they know them' : 'Who can introduce us, and how'} /></label>
+          <label className="aos-field aos-span2"><span>Why they fit</span><textarea className="aos-input" rows={2} value={f.fit_reason} onChange={set('fit_reason')} maxLength={2000} /></label>
           <label className="aos-field"><span>Next action{open ? ' (required)' : ''}</span><input className="aos-input" value={f.next_action} onChange={set('next_action')} required={open} /></label>
           <label className="aos-field"><span>Date{open ? ' (required)' : ''}</span><input className="aos-input" type="date" value={f.next_action_due} onChange={set('next_action_due')} required={open} /></label>
           {seeContact && <label className="aos-field"><span>Email</span><input className="aos-input" type="email" value={f.email} onChange={set('email')} /></label>}
@@ -733,7 +751,8 @@ const FIELDS: { key: string; label: string; match: string[] }[] = [
   { key: 'linkedin_url', label: 'LinkedIn', match: ['linkedin', 'linkedin url', 'linkedin profile', 'li url'] },
   { key: 'stage', label: 'Stage', match: ['stage', 'status', 'pipeline stage'] },
   { key: 'grade', label: 'Grade', match: ['grade', 'priority', 'lead grade'] },
-  { key: 'source', label: 'Source', match: ['source', 'host type', 'type', 'lead source'] },
+  { key: 'source', label: 'Source', match: ['source', 'lead source', 'channel'] },
+  { key: 'host_type', label: 'Host type', match: ['host type', 'type', 'org type', 'organization type', 'category'] },
   { key: 'owner', label: 'Owner', match: ['owner', 'assigned', 'assigned to', 'rep'] },
   { key: 'warm_path', label: 'Warm path', match: ['warm path', 'warm intro', 'intro', 'connection', 'mutual'] },
   { key: 'athlete_reach', label: 'Athlete reach', match: ['athlete reach', 'reach', 'athletes', '# athletes', 'athlete count'] },
