@@ -40,6 +40,9 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; text-wrap: 
 .btn-solid:hover { background: #1c3550; }
 .btn-light { background: #fff; color: var(--ink); }
 .btn-light:hover { background: #eef1f4; }
+.btn-outline { border-color: var(--ink); color: var(--ink); background: #fff; }
+.btn-outline:hover { background: #eef1f4; }
+.done-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
 .btn-line { border-color: rgba(255,255,255,0.6); color: #fff; }
 .btn-line:hover { background: rgba(255,255,255,0.12); }
 .more { font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 2px; }
@@ -293,7 +296,11 @@ footer a:hover { color: var(--ink); }
       <div class="notice" id="done" hidden>
         <h2>Thank you.</h2>
         <p>We will send a private briefing on your program within 5 business days.</p>
-        <a class="btn btn-solid" href="/rola-report">Read The ROLA Report</a>
+        <p>Want to talk sooner?</p>
+        <div class="done-actions">
+          <a class="btn btn-solid" href="https://calendar.app.google/ogVa31BxW5uHkXLB8" target="_blank" rel="noopener">Book 20 minutes</a>
+          <a class="btn btn-outline" href="/rola-report">Read The ROLA Report</a>
+        </div>
       </div>
     </div>
   </section>
