@@ -3,6 +3,7 @@ import { OS_TABLES, listAll, num, str, list, type AirtableRecord } from '@/lib/o
 import { COOKIE, cookieOptions } from '@/lib/os-auth';
 import { can, getUser } from '@/lib/os-session';
 import { CONTACT_FIELDS, LEAD_FIELDS, readActivity, readLead } from '@/lib/os-leads';
+import { WORK_FIELDS, readItem } from '@/lib/os-workspace';
 import {
   CLOSED_STAGES,
   ROLE_REPORT_AGENTS,
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
   const wantPipeline = can(user, 'pipeline');
   const seeContact = can(user, 'see_contact');
 
-  const [instRows, contactRows, reportRows, decisionRows, agentRows, inquiryRows, mentionRows] = await Promise.all([
+  const [instRows, contactRows, reportRows, decisionRows, agentRows, inquiryRows, mentionRows, workRows, teamRows] = await Promise.all([
     wantPipeline || can(user, 'athletes')
       ? safe('Schools', errors, () => listAll(OS_TABLES.institutions, { fields: ['name', 'type', 'conference', 'tier', 'core_sample_count', 'page_public', 'floor_crossed_on'] }))
       : undefined,
@@ -77,6 +78,17 @@ export async function GET(req: NextRequest) {
           }),
         )
       : undefined,
+    safe('Workspace', errors, () =>
+      listAll(OS_TABLES.workspace, {
+        fields: WORK_FIELDS,
+        // Open items, plus anything finished in the last 30 days.
+        filterByFormula: `AND({owner_rec} = '${user.id}', OR({status} = 'Open', IS_AFTER({done_at}, DATEADD(NOW(), -30, 'days'))))`,
+        max: 500,
+      }),
+    ),
+    user.role === 'Admin'
+      ? safe('Team', errors, () => listAll(OS_TABLES.reps, { fields: ['rep_name', 'active'], filterByFormula: '{active}' }))
+      : undefined,
   ]);
 
   const instName = new Map((instRows ?? []).map((r) => [r.id, str(r.fields.name)]));
@@ -101,6 +113,9 @@ export async function GET(req: NextRequest) {
     const a = readActivity(r);
     return { ...a, lead_name: leadName.get(a.lead) || 'A lead' };
   });
+
+  const workspace = workRows?.map(readItem);
+  const team = teamRows?.map((r) => ({ id: r.id, name: str(r.fields.rep_name) })).filter((m) => m.name).sort((a, b) => a.name.localeCompare(b.name));
 
   const allowedAgents = new Set(ROLE_REPORT_AGENTS[user.role]);
   const reports: Report[] | undefined = reportRows
@@ -145,6 +160,18 @@ export async function GET(req: NextRequest) {
     tiles.push({ key: 'meetings', label: 'Meetings booked', value: String(contacts.filter((c) => c.stage === 'Meeting Booked').length), go: 'pipeline', tone: 'neutral' });
     tiles.push({ key: 'won', label: 'Closed won', value: String(contacts.filter((c) => c.stage === 'Closed Won').length), go: 'pipeline', tone: 'neutral' });
   }
+  if (workspace) {
+    const pt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
+    const due = workspace.filter((i) => i.status === 'Open' && i.due_date && i.due_date <= pt);
+    tiles.push({
+      key: 'work',
+      label: 'My tasks and messages due',
+      value: String(due.length),
+      note: due.length ? 'today or overdue' : 'nothing due',
+      go: 'workspace',
+      tone: due.length ? 'warn' : 'ok',
+    });
+  }
   if (inquiryRows) {
     const fresh = inquiryRows.filter((r) => str(r.fields.status) === 'New' || !r.fields.status).length;
     tiles.push({ key: 'inquiries', label: 'New inquiries', value: String(fresh), note: 'from rolaglobal.com', go: 'pipeline', tone: fresh ? 'warn' : 'neutral' });
@@ -174,6 +201,6 @@ export async function GET(req: NextRequest) {
     tiles.push({ key: 'reports', label: 'Agent reports this week', value: String(recent.length), note: failed ? `${failed} failed` : undefined, go: 'reports', tone: failed ? 'bad' : 'neutral' });
   }
 
-  const data: OsData = { user, generatedAt: new Date().toISOString(), tiles, contacts, mentions, schools, reports, decisions, agents, errors };
+  const data: OsData = { user, generatedAt: new Date().toISOString(), tiles, contacts, mentions, workspace, team, schools, reports, decisions, agents, errors };
   return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } });
 }

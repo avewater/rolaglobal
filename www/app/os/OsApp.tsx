@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiError, ImportView, LeadDrawer, MoveDialog, Pipeline, Queue, api, type Crm } from './crm';
+import { ItemCard, ItemEditor, ProfileForm, Workspace, localToday, type Ws } from './workspace';
 import {
   REASON_STAGES,
   SAMPLE_FLOOR,
@@ -9,6 +10,8 @@ import {
   sectionsFor,
   type Contact,
   type OsData,
+  type OsUser,
+  type WorkItem,
   type SectionKey,
   type Tile,
 } from '@/lib/os-roles';
@@ -25,6 +28,8 @@ export default function OsApp() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [moving, setMoving] = useState<{ lead: Contact; stage: string } | null>(null);
   const [toast, setToast] = useState('');
+  const [items, setItemsState] = useState<WorkItem[]>([]);
+  const [composing, setComposing] = useState<{ kind: 'Entry' | 'Message'; lead: Contact } | null>(null);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -38,6 +43,7 @@ export default function OsApp() {
       if (!res.ok) throw new Error(json.error || 'The OS could not load.');
       setData(json);
       setLeads(json.contacts ?? []);
+      setItemsState(json.workspace ?? []);
       setPhase('ready');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'The OS could not load.');
@@ -113,8 +119,23 @@ export default function OsApp() {
         move,
         notify: setToast,
         reload: load,
+        compose: (kind, lead) => setComposing({ kind, lead }),
       }
     : null;
+
+  const ws: Ws | null = data
+    ? {
+        user: data.user,
+        items,
+        setItems: (fn) => setItemsState(fn),
+        leads,
+        team: data.team ?? [],
+        notify: setToast,
+        patchLead: patch,
+        openLead: setOpenId,
+      }
+    : null;
+  const setUser = (u: OsUser) => setData((d) => (d ? { ...d, user: u } : d));
 
   const go = (key: SectionKey) => {
     window.location.hash = key;
@@ -123,7 +144,7 @@ export default function OsApp() {
 
   if (phase === 'loading') return <div className="aos-center aos-muted">Loading</div>;
   if (phase === 'signed_out') return <SignIn onDone={load} />;
-  if (phase === 'error' || !data || !crm)
+  if (phase === 'error' || !data || !crm || !ws)
     return (
       <div className="aos-center">
         <div className="aos-stack">
@@ -165,7 +186,13 @@ export default function OsApp() {
         </header>
         {data.errors.length > 0 && <div className="aos-banner">Could not load: {data.errors.join(', ')}. The rest is current.</div>}
 
-        {section === 'queue' && <Queue crm={crm} />}
+        {section === 'queue' && (
+          <>
+            <DueWork ws={ws} go={go} />
+            <Queue crm={crm} />
+          </>
+        )}
+        {section === 'workspace' && <Workspace ws={ws} />}
         {section === 'today' && <Today data={data} go={go} />}
         {section === 'pipeline' && <Pipeline crm={crm} />}
         {section === 'import' && <ImportView crm={crm} />}
@@ -173,7 +200,7 @@ export default function OsApp() {
         {section === 'reports' && <Reports data={data} />}
         {section === 'decisions' && <Decisions data={data} />}
         {section === 'agents' && <Agents data={data} />}
-        {section === 'account' && <Account data={data} />}
+        {section === 'account' && <Account data={data} onSaved={setUser} notify={setToast} />}
       </main>
 
       {openId && <LeadDrawer key={openId} id={openId} crm={crm} onClose={() => setOpenId(null)} />}
@@ -189,6 +216,7 @@ export default function OsApp() {
           }}
         />
       )}
+      {composing && <ItemEditor ws={ws} kind={composing.kind} lead={composing.lead} onClose={() => setComposing(null)} />}
       {toast && <div className="aos-toast" role="status">{toast}</div>}
 
       <nav className="aos-tabs" aria-label="Sections">
@@ -396,7 +424,23 @@ function Agents({ data }: { data: OsData }) {
   );
 }
 
-function Account({ data }: { data: OsData }) {
+function DueWork({ ws, go }: { ws: Ws; go: (k: SectionKey) => void }) {
+  const today = localToday();
+  const due = ws.items
+    .filter((i) => i.status === 'Open' && i.due_date && i.due_date <= today)
+    .sort((a, b) => `${a.due_date}${a.due_time || '99'}`.localeCompare(`${b.due_date}${b.due_time || '99'}`));
+  return (
+    <section className="aos-stack">
+      <div className="aos-row-head">
+        <div className="aos-eyebrow">My tasks and messages due <span className="aos-count">{due.length}</span></div>
+        <button className="aos-ghost" onClick={() => go('workspace')}>Open workspace</button>
+      </div>
+      {due.length ? due.map((i) => <ItemCard key={i.id} item={i} ws={ws} today={today} compact />) : <p className="aos-muted aos-small">Nothing due from your workspace.</p>}
+    </section>
+  );
+}
+
+function Account({ data, onSaved, notify }: { data: OsData; onSaved: (u: OsUser) => void; notify: (m: string) => void }) {
   const signOut = async () => {
     await fetch('/api/os/logout', { method: 'POST' });
     window.location.hash = '';
@@ -406,8 +450,9 @@ function Account({ data }: { data: OsData }) {
     <div className="aos-stack-lg">
       <div className="aos-stack">
         <div className="aos-h2">{data.user.name}</div>
-        <div className="aos-muted">{data.user.role}</div>
+        <div className="aos-muted">{[data.user.profile.title, data.user.role === 'VA' ? 'Outreach' : data.user.role].filter(Boolean).join(' · ')}</div>
       </div>
+      <ProfileForm key={data.user.name + data.user.profile.title} user={data.user} onSaved={onSaved} notify={notify} />
       <div className="aos-stack">
         <div className="aos-eyebrow">What you can see</div>
         <div className="aos-chips">{data.user.perms.map((p) => <Pill key={p}>{p.replace('_', ' ')}</Pill>)}</div>

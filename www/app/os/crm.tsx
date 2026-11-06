@@ -62,6 +62,7 @@ export type Crm = {
   move: (l: Contact, stage: string) => void;
   notify: (msg: string) => void;
   reload: () => void;
+  compose?: (kind: 'Entry' | 'Message', lead: Contact) => void;
 };
 
 function Pill({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: 'ok' | 'warn' | 'bad' | 'neutral' }) {
@@ -602,6 +603,16 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
                   ))}
                 </div>
                 {lead.dnc && <p className="aos-muted aos-small">Outreach logging is off for Do Not Contact leads.</p>}
+              </section>
+            )}
+
+            {crm.compose && (
+              <section className="aos-stack">
+                <div className="aos-eyebrow">My workspace</div>
+                <div className="aos-chips">
+                  <button className="aos-chip aos-chip-lg" disabled={lead.dnc} onClick={() => crm.compose!('Message', lead)}>Draft a message</button>
+                  <button className="aos-chip aos-chip-lg" onClick={() => crm.compose!('Entry', lead)}>Add a task or note</button>
+                </div>
               </section>
             )}
 

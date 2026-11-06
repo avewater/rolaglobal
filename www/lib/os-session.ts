@@ -2,7 +2,7 @@ import 'server-only';
 import type { NextRequest } from 'next/server';
 import { COOKIE, verifySession } from './os-auth';
 import { OS_TABLES, getRecord, list, str } from './os-airtable';
-import { effectivePerms, isRole, type OsUser, type Perm } from './os-roles';
+import { PROFILE_KEYS, effectivePerms, isRole, type OsUser, type Perm, type Profile } from './os-roles';
 
 // First line of every protected route. Re-reads the person's row on every call,
 // so switching someone off or changing a permission takes effect on their next tap.
@@ -18,6 +18,7 @@ export async function getUser(req: NextRequest): Promise<OsUser | null> {
     name: str(row.fields.rep_name) || session.name,
     role,
     perms: effectivePerms(role, list(row.fields.os_grant), list(row.fields.os_revoke)),
+    profile: Object.fromEntries(PROFILE_KEYS.map((k) => [k, str(row.fields[`profile_${k}`])])) as Profile,
   };
 }
 

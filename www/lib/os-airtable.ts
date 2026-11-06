@@ -11,6 +11,7 @@ export const OS_TABLES = {
   inquiries: 'tbltNDu34zkYb86gA',
   athletes: 'tblZIj9HNAE4Sgq2m',
   activity: 'tbl2qnsmqNVDtzhfZ',
+  workspace: 'tblDrgTV0SY7SwsW2',
 } as const;
 
 export type AirtableRecord = { id: string; createdTime: string; fields: Record<string, unknown> };
@@ -99,6 +100,10 @@ export async function createRecords(table: string, rows: Record<string, unknown>
 
 export async function updateRecord(table: string, id: string, fields: Record<string, unknown>): Promise<AirtableRecord> {
   return call(table, { method: 'PATCH', body: JSON.stringify({ records: [{ id, fields }], typecast: false }) }).then((r) => r.records[0]);
+}
+
+export async function deleteRecord(table: string, id: string) {
+  return call(`${table}/${id}`, { method: 'DELETE' });
 }
 
 // Small readers that tolerate missing or oddly typed cells.

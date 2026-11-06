@@ -52,9 +52,10 @@ export function effectivePerms(role: Role, grant: string[] = [], revoke: string[
   return PERMS.filter((p) => set.has(p));
 }
 
-export type SectionKey = 'queue' | 'today' | 'pipeline' | 'schools' | 'reports' | 'decisions' | 'agents' | 'import' | 'account';
+export type SectionKey = 'queue' | 'workspace' | 'today' | 'pipeline' | 'schools' | 'reports' | 'decisions' | 'agents' | 'import' | 'account';
 export const SECTIONS: { key: SectionKey; label: string; perm: Perm | null; group: 'Work' | 'Intelligence' | 'Resources' }[] = [
   { key: 'queue', label: 'My Queue', perm: 'pipeline', group: 'Work' },
+  { key: 'workspace', label: 'My Workspace', perm: null, group: 'Work' },
   { key: 'today', label: 'Today', perm: 'today', group: 'Work' },
   { key: 'pipeline', label: 'Pipeline', perm: 'pipeline', group: 'Work' },
   { key: 'schools', label: 'Schools', perm: 'pipeline', group: 'Work' },
@@ -99,7 +100,33 @@ export const SAMPLE_FLOOR = 10;
 export type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 export type Tile = { key: string; label: string; value: string; note?: string; go?: SectionKey; tone: Tone };
 
-export type OsUser = { id: string; name: string; role: Role; perms: Perm[] };
+export type Profile = { title: string; email: string; phone: string; linkedin: string; instagram: string; x: string; tiktok: string; website: string };
+export const PROFILE_KEYS = ['title', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website'] as const;
+export const profileComplete = (p: Profile) => Boolean(p.title && p.email && p.phone);
+export type OsUser = { id: string; name: string; role: Role; perms: Perm[]; profile: Profile };
+
+// My Workspace. An Entry with a date is a task, without a date it is a note.
+// A Message with a date is scheduled, without a date it is a draft. The OS never sends messages.
+export const CHANNELS = ['Email', 'LinkedIn', 'Text', 'Instagram', 'Other'] as const;
+export type WorkItem = {
+  id: string;
+  kind: 'Entry' | 'Message';
+  title: string;
+  body: string;
+  channel: string;
+  to_name: string;
+  subject: string;
+  lead: string;
+  due_date: string;
+  due_time: string;
+  status: 'Open' | 'Done' | 'Sent';
+  done_at: string;
+  created_by: string;
+  created: string;
+};
+export const itemLabel = (i: Pick<WorkItem, 'kind' | 'due_date'>) =>
+  i.kind === 'Message' ? (i.due_date ? 'Scheduled message' : 'Draft message') : i.due_date ? 'Task' : 'Note';
+export type Teammate = { id: string; name: string };
 
 export type Contact = {
   id: string;
@@ -139,6 +166,8 @@ export type OsData = {
   tiles: Tile[];
   contacts?: Contact[];
   mentions?: Mention[];
+  workspace?: WorkItem[];
+  team?: Teammate[];
   schools?: School[];
   reports?: Report[];
   decisions?: Decision[];

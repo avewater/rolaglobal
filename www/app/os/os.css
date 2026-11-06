@@ -203,3 +203,19 @@ a.aos-chip { color: var(--fg); text-decoration: none; }
   .aos-grid2 { grid-template-columns: 1fr; }
   .aos-toast { bottom: calc(var(--tabs) + 16px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* ---------- My Workspace ---------- */
+.aos-item { gap: 8px; }
+.aos-item-title { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.aos-tick { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--fg); flex: none; }
+.aos-item-done .aos-row-title { text-decoration: line-through; color: var(--muted); }
+.aos-clamp { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.aos-chip-quiet { color: var(--muted); border-color: transparent; }
+.aos-chip-quiet:hover:not(:disabled) { color: var(--bad); }
+.aos-seg .aos-count { margin-left: 4px; }
+.aos-seg button[aria-pressed='true'] .aos-count { color: #d3b579; }
+.aos-banner a { color: inherit; font-weight: 600; }
+@media (max-width: 860px) {
+  .aos-seg { display: flex; width: 100%; }
+  .aos-seg button { flex: 1; padding: 8px 6px; }
+}
