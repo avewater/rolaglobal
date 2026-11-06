@@ -3,7 +3,6 @@
 // The CRM half of ROLA OS: My Queue, the 12-stage pipeline (board and list), the lead drawer and CSV import.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BRANDS,
   CLOSED_STAGES,
   DISPOSITION_REASONS,
   GRADES,
@@ -180,7 +179,6 @@ export function Queue({ crm }: { crm: Crm }) {
 type SortKey = 'name' | 'organization' | 'stage' | 'grade' | 'owner' | 'next_action_due' | 'last_touch';
 
 export function Pipeline({ crm }: { crm: Crm }) {
-  const [brand, setBrand] = useState<string>(() => (typeof window !== 'undefined' && store.get('os.brand')) || BRANDS[0]);
   const [view, setView] = useState<'board' | 'list'>(() => (typeof window !== 'undefined' && (store.get('os.view') as 'board' | 'list')) || 'board');
   const [q, setQ] = useState('');
   const [owner, setOwner] = useState('');
@@ -190,18 +188,16 @@ export function Pipeline({ crm }: { crm: Crm }) {
   const [over, setOver] = useState('');
   const t = todayET();
 
-  useEffect(() => store.set('os.brand', brand), [brand]);
   useEffect(() => store.set('os.view', view), [view]);
 
   const leads = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return crm.leads.filter(
       (l) =>
-        l.brand === brand &&
         (!owner || l.owner === owner) &&
         (!needle || [l.name, l.organization, l.institution, l.title, l.email].some((v) => (v || '').toLowerCase().includes(needle))),
     );
-  }, [crm.leads, brand, owner, q]);
+  }, [crm.leads, owner, q]);
 
   const stages = showClosed ? LEAD_STAGES : LEAD_STAGES.filter((s) => !CLOSED_STAGES.includes(s));
   const closedCount = leads.filter((l) => CLOSED_STAGES.includes(l.stage)).length;
@@ -223,11 +219,6 @@ export function Pipeline({ crm }: { crm: Crm }) {
   return (
     <div className="aos-stack">
       <div className="aos-toolbar">
-        <div className="aos-seg" role="group" aria-label="Brand">
-          {BRANDS.map((b) => (
-            <button key={b} aria-pressed={brand === b} onClick={() => setBrand(b)}>{b}</button>
-          ))}
-        </div>
         <div className="aos-seg" role="group" aria-label="View">
           <button aria-pressed={view === 'board'} onClick={() => setView('board')}>Board</button>
           <button aria-pressed={view === 'list'} onClick={() => setView('list')}>List</button>
@@ -338,7 +329,7 @@ export function Pipeline({ crm }: { crm: Crm }) {
         </div>
       )}
       {crm.canEdit && <p className="aos-muted aos-small">Drag a card to change its stage, or open it. Closing a lead or marking Do Not Contact asks for a reason.</p>}
-      {adding && <NewLead crm={crm} brand={brand} onClose={() => setAdding(false)} />}
+      {adding && <NewLead crm={crm} onClose={() => setAdding(false)} />}
     </div>
   );
 }
@@ -429,9 +420,9 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 
 /* ---------------- New lead ---------------- */
 
-function NewLead({ crm, brand, onClose }: { crm: Crm; brand: string; onClose: () => void }) {
+function NewLead({ crm, onClose }: { crm: Crm; onClose: () => void }) {
   const me = ownerFor(crm.user.name);
-  const [f, setF] = useState({ name: '', organization: '', title: '', email: '', brand, grade: '', source: '', owner: me || 'Michael', next_action: 'Research lead', next_action_due: todayET() });
+  const [f, setF] = useState({ name: '', organization: '', title: '', email: '', grade: '', source: '', owner: me || 'Michael', next_action: 'Research lead', next_action_due: todayET() });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((x) => ({ ...x, [k]: e.target.value }));
@@ -458,7 +449,6 @@ function NewLead({ crm, brand, onClose }: { crm: Crm; brand: string; onClose: ()
           <label className="aos-field"><span>Organization</span><input className="aos-input" value={f.organization} onChange={set('organization')} /></label>
           <label className="aos-field"><span>Title</span><input className="aos-input" value={f.title} onChange={set('title')} /></label>
           {crm.user.perms.includes('see_contact') && <label className="aos-field"><span>Email</span><input className="aos-input" type="email" value={f.email} onChange={set('email')} /></label>}
-          <Sel label="Brand" value={f.brand} onChange={set('brand')} opts={BRANDS} />
           <Sel label="Owner" value={f.owner} onChange={set('owner')} opts={OWNERS} />
           <Sel label="Grade" value={f.grade} onChange={set('grade')} opts={GRADES} blank />
           <Sel label="Source" value={f.source} onChange={set('source')} opts={SOURCES} blank />
@@ -552,7 +542,7 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
     <div className="aos-drawer-wrap" onClick={onClose}>
       <aside className="aos-drawer" role="dialog" aria-modal="true" aria-label={lead?.name || 'Lead'} onClick={(e) => e.stopPropagation()}>
         <div className="aos-row-head">
-          <div className="aos-eyebrow">{lead?.brand}</div>
+          <div className="aos-eyebrow">Lead</div>
           <button className="aos-x" onClick={onClose} aria-label="Close">×</button>
         </div>
         {!lead ? (
@@ -677,7 +667,7 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
 
 function EditLead({ lead, crm, onClose, onSaved }: { lead: Contact; crm: Crm; onClose: () => void; onSaved: (l: Contact) => void }) {
   const init = {
-    name: lead.name, title: lead.title, organization: lead.organization, owner: lead.owner, grade: lead.grade, source: lead.source, brand: lead.brand,
+    name: lead.name, title: lead.title, organization: lead.organization, owner: lead.owner, grade: lead.grade, source: lead.source,
     warm_path: lead.warm_path, athlete_reach: lead.athlete_reach ? String(lead.athlete_reach) : '', next_action: lead.next_action,
     next_action_due: lead.next_action_due, linkedin_url: lead.linkedin_url, email: lead.email ?? '', phone: lead.phone ?? '', pinned_note: lead.pinned_note,
   };
@@ -712,7 +702,6 @@ function EditLead({ lead, crm, onClose, onSaved }: { lead: Contact; crm: Crm; on
           <Sel label="Owner" value={f.owner} onChange={set('owner')} opts={OWNERS} blank />
           <Sel label="Grade" value={f.grade} onChange={set('grade')} opts={GRADES} blank />
           <Sel label="Source" value={f.source} onChange={set('source')} opts={SOURCES} blank />
-          <Sel label="Brand" value={f.brand} onChange={set('brand')} opts={BRANDS} />
           <label className="aos-field"><span>Athlete reach (estimate)</span><input className="aos-input" inputMode="numeric" value={f.athlete_reach} onChange={set('athlete_reach')} /></label>
           <label className="aos-field aos-span2"><span>Warm path</span><input className="aos-input" value={f.warm_path} onChange={set('warm_path')} placeholder="Who can introduce us, and how" /></label>
           <label className="aos-field"><span>Next action{open ? ' (required)' : ''}</span><input className="aos-input" value={f.next_action} onChange={set('next_action')} required={open} /></label>
@@ -800,7 +789,6 @@ export function ImportView({ crm }: { crm: Crm }) {
   const [rows, setRows] = useState<string[][]>([]);
   const [fileName, setFileName] = useState('');
   const [map, setMap] = useState<Record<string, number>>({});
-  const [brand, setBrand] = useState<string>(BRANDS[0]);
   const [check, setCheck] = useState<{ would_create: number; skipped: { row: number; name: string; why: string }[] } | null>(null);
   const [done, setDone] = useState<{ created: number; skipped: { row: number; name: string; why: string }[] } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -837,7 +825,7 @@ export function ImportView({ crm }: { crm: Crm }) {
     setBusy(true);
     setErr('');
     try {
-      const r = await api('/api/os/import', { rows: payload(), brand, dry_run: dry });
+      const r = await api('/api/os/import', { rows: payload(), dry_run: dry });
       if (dry) setCheck(r);
       else {
         setDone(r);
@@ -859,9 +847,6 @@ export function ImportView({ crm }: { crm: Crm }) {
         <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) load(await f.text(), f.name); e.target.value = ''; }} />
         <button className="aos-btn aos-btn-sm" onClick={() => fileRef.current?.click()}>Choose CSV</button>
         {fileName && <span className="aos-small">{fileName}: {body.length} rows</span>}
-        <div className="aos-seg" role="group" aria-label="Brand">
-          {BRANDS.map((b) => <button key={b} aria-pressed={brand === b} onClick={() => { setBrand(b); setCheck(null); }}>{b}</button>)}
-        </div>
       </div>
 
       {headers.length > 0 && (
@@ -894,7 +879,7 @@ export function ImportView({ crm }: { crm: Crm }) {
           {err && <p className="aos-error">{err}</p>}
           <div className="aos-actions aos-actions-start">
             <button className="aos-ghost" disabled={busy || (map.name ?? -1) < 0} onClick={() => run(true)}>{busy && !check ? 'Checking' : 'Check for duplicates'}</button>
-            {check && <button className="aos-btn" disabled={busy || !check.would_create} onClick={() => run(false)}>{busy ? 'Importing' : `Import ${check.would_create} ${check.would_create === 1 ? 'lead' : 'leads'} into ${brand}`}</button>}
+            {check && <button className="aos-btn" disabled={busy || !check.would_create} onClick={() => run(false)}>{busy ? 'Importing' : `Import ${check.would_create} ${check.would_create === 1 ? 'lead' : 'leads'}`}</button>}
           </div>
           {(check || done) && (
             <div className="aos-stack">

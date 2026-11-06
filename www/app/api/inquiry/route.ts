@@ -162,7 +162,6 @@ export async function POST(req: NextRequest) {
         organization: org,
         channel: 'Email',
         pipeline_stage: 'Replied',
-        brand: 'ROLA Global',
         source: 'Inbound form',
         lead_owner: 'Michael',
         stage_changed_at: todayLA(),

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OS_TABLES, createRecords, listAll, str } from '@/lib/os-airtable';
 import { todayET } from '@/lib/os-leads';
 import { can, getUser } from '@/lib/os-session';
-import { BRANDS, DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES } from '@/lib/os-roles';
+import { DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES } from '@/lib/os-roles';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
   const rows: any[] = Array.isArray(b.rows) ? b.rows : [];
   if (!rows.length) return bad('No rows to import.');
   if (rows.length > 1000) return bad('Import at most 1,000 rows at a time.');
-  const brand = ci(t(b.brand), BRANDS) || 'ROLA Global';
 
   const existing = await listAll(OS_TABLES.contacts, { fields: ['name', 'organization', 'email'] });
   const emails = new Set(existing.map((r) => str(r.fields.email).toLowerCase()).filter(Boolean));
@@ -64,7 +63,6 @@ export async function POST(req: NextRequest) {
       pipeline_stage: stage,
       ...(stage === 'Do Not Contact' ? { do_not_contact: true } : {}),
       ...(closedWithReason ? { disposition_reason: ci(t(r.disposition_reason), DISPOSITION_REASONS) || 'Other' } : {}),
-      brand,
       ...(ci(t(r.grade), GRADES) ? { grade: ci(t(r.grade), GRADES) } : {}),
       ...(ci(t(r.source), SOURCES) ? { source: ci(t(r.source), SOURCES) } : {}),
       lead_owner: ci(t(r.owner), OWNERS) || 'Rein',

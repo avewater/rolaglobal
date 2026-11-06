@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Modal, api, fmtDate } from './crm';
 import {
   ACCOUNT_TYPES,
-  BRANDS,
   CHANNELS,
   isTask,
   itemLabel,
@@ -422,7 +421,7 @@ export function AccountsView({ cx, sub, prefill, clearPrefill }: { cx: Acx; sub:
         {rows.length > 0 && (
           <table className="aos-table">
             <thead>
-              <tr><th className="aos-th">Account</th><th className="aos-th">Type</th><th className="aos-th">Open tasks</th><th className="aos-th">Next task</th><th className="aos-th">Brand</th></tr>
+              <tr><th className="aos-th">Account</th><th className="aos-th">Type</th><th className="aos-th">Open tasks</th><th className="aos-th">Next task</th></tr>
             </thead>
             <tbody>
               {rows.map(({ a, open, next }) => (
@@ -431,7 +430,6 @@ export function AccountsView({ cx, sub, prefill, clearPrefill }: { cx: Acx; sub:
                   <td>{a.account_type}</td>
                   <td>{open.length}</td>
                   <td>{next ? <><span className={next.due_date < today ? 'aos-due' : ''}>{fmtDate(next.due_date)}</span> · {next.title}</> : <span className="aos-muted">None</span>}</td>
-                  <td>{a.brand}</td>
                 </tr>
               ))}
             </tbody>
@@ -483,10 +481,6 @@ function ProfileFields({ f, set }: { f: Record<string, string>; set: (k: string,
           <input className="aos-input" type={p.type || 'text'} value={f[p.k] ?? ''} placeholder={p.placeholder} onChange={(e) => set(p.k, e.target.value)} maxLength={300} />
         </label>
       ))}
-      <label className="aos-field">
-        <span>Brand</span>
-        <select className="aos-input" value={f.brand} onChange={(e) => set('brand', e.target.value)}>{BRANDS.map((b) => <option key={b}>{b}</option>)}</select>
-      </label>
       <label className="aos-field aos-span2"><span>About (optional)</span><textarea className="aos-input" rows={2} value={f.about} onChange={(e) => set('about', e.target.value)} maxLength={4000} placeholder="Who they are and why they matter" /></label>
     </div>
   );
@@ -496,7 +490,6 @@ function NewAccount({ cx, lead, onClose }: { cx: Acx; lead: Contact | null; onCl
   const [f, setF] = useState<Record<string, string>>({
     name: lead?.name || '',
     account_type: '',
-    brand: lead?.brand || 'ROLA Global',
     title: lead?.title || '',
     organization: lead?.organization || lead?.institution || '',
     email: lead?.email || '',
@@ -632,7 +625,7 @@ function AccountDetail({ cx, account }: { cx: Acx; account: Account }) {
       <button className="aos-ghost aos-self-start" onClick={() => cx.go('accounts')}>All accounts</button>
       <header className="aos-acct-head">
         <div className="aos-stack">
-          <div className="aos-eyebrow">{[account.account_type || 'Account', account.brand].join(' · ')}</div>
+          <div className="aos-eyebrow">{account.account_type || 'Account'}</div>
           {(account.title || account.organization) && <div className="aos-muted">{[account.title, account.organization].filter(Boolean).join(', ')}</div>}
           <div className="aos-chips">
             {account.email && <CopyChip value={account.email} />}
@@ -716,7 +709,7 @@ function CopyChip({ value }: { value: string }) {
 
 function EditAccount({ cx, account, onClose }: { cx: Acx; account: Account; onClose: () => void }) {
   const init = useMemo(
-    () => Object.fromEntries(['name', 'account_type', 'brand', 'title', 'organization', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website', 'about'].map((k) => [k, String((account as any)[k] ?? '')])),
+    () => Object.fromEntries(['name', 'account_type', 'title', 'organization', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website', 'about'].map((k) => [k, String((account as any)[k] ?? '')])),
     [account],
   );
   const [f, setF] = useState<Record<string, string>>(init);

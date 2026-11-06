@@ -78,7 +78,7 @@ export function sectionsFor(perms: Perm[]) {
   return SECTIONS.filter((s) => s.perm === null || perms.includes(s.perm));
 }
 
-// The 12-stage outreach pipeline. Both brands share the stages; the board filters by brand.
+// The 12-stage outreach pipeline.
 export const LEAD_STAGES = ['New', 'Researched', 'Draft Ready', 'Approved', 'Touch 1', 'Touch 2', 'Touch 3', 'Replied', 'Meeting Booked', 'Closed Won', 'Closed Lost', 'Do Not Contact'] as const;
 export type LeadStage = (typeof LEAD_STAGES)[number];
 export const CLOSED_STAGES: readonly string[] = ['Closed Won', 'Closed Lost', 'Do Not Contact'];
@@ -87,7 +87,6 @@ export const isOpenStage = (s: string) => !CLOSED_STAGES.includes(s);
 // Stages that send something to the lead. Do Not Contact blocks every one of them.
 export const SEND_STAGES: readonly string[] = ['Approved', 'Touch 1', 'Touch 2', 'Touch 3'];
 export const DISPOSITION_REASONS = ['Not interested', 'Wrong person', 'No response', 'Not a fit', 'Other'] as const;
-export const BRANDS = ['ROLA Global', 'AAVE Water'] as const;
 export const GRADES = ['A', 'B', 'C'] as const;
 export const SOURCES = ['SAAC', 'Collective', 'Program', 'AD', 'Inbound form', 'Referral', 'LinkedIn', 'Event', 'Other'] as const;
 export const OWNERS = ['Michael', 'Rein', 'Sid', 'Hussain'] as const;
@@ -117,12 +116,11 @@ export type OsUser = { id: string; name: string; role: Role; perms: Perm[]; prof
 // An Entry with a date is a task; without a date it is a note.
 // A Message with a date is scheduled; without one it is a draft. The OS never sends messages.
 export const ACCOUNT_TYPES = ['Athlete', 'Athletic department', 'Collective', 'Agency', 'Professional organization', 'Nonprofit', 'Brand or sponsor', 'Other'] as const;
-export const ACCOUNT_FIELDS_EDIT = ['name', 'account_type', 'brand', 'title', 'organization', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website', 'about'] as const;
+export const ACCOUNT_FIELDS_EDIT = ['name', 'account_type', 'title', 'organization', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website', 'about'] as const;
 export type Account = {
   id: string;
   name: string;
   account_type: string;
-  brand: string;
   title: string;
   organization: string;
   email: string;
@@ -171,7 +169,6 @@ export type Contact = {
   organization: string;
   institution: string;
   stage: string;
-  brand: string;
   grade: string;
   owner: string;
   source: string;

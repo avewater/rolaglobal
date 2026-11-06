@@ -169,7 +169,7 @@ export async function GET(req: NextRequest) {
     const due = queue.filter((c) => c.stage !== 'Replied' && c.next_action_due && c.next_action_due <= t).length;
     const replies = queue.filter((c) => c.stage === 'Replied').length;
     tiles.push({ key: 'queue', label: 'In my queue', value: String(due + replies), note: due + replies ? `${due} due or overdue, ${replies} replies waiting` : 'all clear', go: 'queue', tone: due + replies ? 'warn' : 'ok' });
-    tiles.push({ key: 'pipeline', label: 'Open leads', value: String(open.length), note: 'across both brands', go: 'pipeline', tone: 'neutral' });
+    tiles.push({ key: 'pipeline', label: 'Open leads', value: String(open.length), go: 'pipeline', tone: 'neutral' });
     tiles.push({ key: 'meetings', label: 'Meetings booked', value: String(contacts.filter((c) => c.stage === 'Meeting Booked').length), go: 'pipeline', tone: 'neutral' });
     tiles.push({ key: 'won', label: 'Closed won', value: String(contacts.filter((c) => c.stage === 'Closed Won').length), go: 'pipeline', tone: 'neutral' });
   }

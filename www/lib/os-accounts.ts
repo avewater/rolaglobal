@@ -2,7 +2,7 @@ import 'server-only';
 import { OS_TABLES, getRecord, list, str, type AirtableRecord } from './os-airtable';
 import { CHANNELS, effectivePerms, isRole, type Account, type Item, type OsUser } from './os-roles';
 
-export const ACCOUNT_READ = ['name', 'account_type', 'brand', 'title', 'organization', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website', 'about', 'lead_rec', 'owner_name', 'created_by'];
+export const ACCOUNT_READ = ['name', 'account_type', 'title', 'organization', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website', 'about', 'lead_rec', 'owner_name', 'created_by'];
 export const ITEM_READ = ['title', 'account_rec', 'kind', 'body', 'due_date', 'due_time', 'status', 'assignee_rec', 'assignee_name', 'created_by', 'created_by_rec', 'channel', 'to_name', 'subject', 'done_at', 'done_by'];
 
 export function readAccount(r: AirtableRecord): Account {
@@ -11,7 +11,6 @@ export function readAccount(r: AirtableRecord): Account {
     id: r.id,
     name: str(f.name),
     account_type: str(f.account_type),
-    brand: str(f.brand) || 'ROLA Global',
     title: str(f.title),
     organization: str(f.organization),
     email: str(f.email),
@@ -141,6 +140,5 @@ export const accountProfileFields = (b: any, partial: boolean) => {
     out[k] = b[k];
   };
   sel('account_type', ['Athlete', 'Athletic department', 'Collective', 'Agency', 'Professional organization', 'Nonprofit', 'Brand or sponsor', 'Other']);
-  sel('brand', ['ROLA Global', 'AAVE Water'], partial ? undefined : 'ROLA Global');
   return out;
 };

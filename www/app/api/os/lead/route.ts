@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OS_TABLES, createRecord } from '@/lib/os-airtable';
 import { logActivity, readLead, todayET } from '@/lib/os-leads';
 import { can, getUser } from '@/lib/os-session';
-import { BRANDS, GRADES, LEAD_STAGES, OWNERS, SOURCES, ownerFor } from '@/lib/os-roles';
+import { GRADES, LEAD_STAGES, OWNERS, SOURCES, ownerFor } from '@/lib/os-roles';
 
 export const dynamic = 'force-dynamic';
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
       ...(organization ? { organization } : {}),
       ...(t(b.title) ? { title: t(b.title) } : {}),
       pipeline_stage: stage,
-      brand: pick(b.brand, BRANDS) || 'ROLA Global',
       ...(pick(b.grade, GRADES) ? { grade: b.grade } : {}),
       ...(pick(b.source, SOURCES) ? { source: b.source } : {}),
       lead_owner: pick(b.owner, OWNERS) || ownerFor(user.name) || 'Michael',

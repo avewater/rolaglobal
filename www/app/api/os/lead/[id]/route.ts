@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OS_TABLES, formulaString, getRecord, listAll, updateRecord } from '@/lib/os-airtable';
 import { logActivity, readActivity, readLead, todayET } from '@/lib/os-leads';
 import { can, getUser } from '@/lib/os-session';
-import { BRANDS, DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES, isOpenStage } from '@/lib/os-roles';
+import { DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES, isOpenStage } from '@/lib/os-roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
         out[target] = inF[k];
         return true;
       };
-      if (!sel('grade', 'grade', GRADES) || !sel('owner', 'lead_owner', OWNERS) || !sel('source', 'source', SOURCES) || !sel('brand', 'brand', BRANDS))
+      if (!sel('grade', 'grade', GRADES) || !sel('owner', 'lead_owner', OWNERS) || !sel('source', 'source', SOURCES))
         return bad('One of the choices is not on the list.');
       if (can(user, 'see_contact')) {
         if ('email' in inF) {

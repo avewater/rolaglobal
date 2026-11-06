@@ -5,7 +5,7 @@ import { LEAD_STAGES, LEGACY_STAGE, OWNERS, type Activity, type Contact } from '
 export const todayET = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 
 export const LEAD_FIELDS = [
-  'name', 'title', 'organization', 'institution', 'pipeline_stage', 'stage', 'brand', 'grade', 'lead_owner', 'owner', 'source',
+  'name', 'title', 'organization', 'institution', 'pipeline_stage', 'stage', 'grade', 'lead_owner', 'owner', 'source',
   'channel', 'warm_path', 'athlete_reach', 'next_action', 'next_action_due', 'last_touch', 'stage_changed_at', 'pinned_note',
   'disposition_reason', 'do_not_contact', 'linkedin_url',
 ];
@@ -23,7 +23,6 @@ export function readLead(r: AirtableRecord, seeContact: boolean, instName?: Map<
     organization: str(f.organization),
     institution: instName ? list(f.institution).map((id) => instName.get(id) || '').filter(Boolean).join(', ') : '',
     stage,
-    brand: str(f.brand) || 'ROLA Global',
     grade: str(f.grade),
     owner: str(f.lead_owner) || (oldOwner === 'VA' ? 'Rein' : oldOwner === 'Ladi' ? 'Hussain' : oldOwner),
     source: str(f.source),
