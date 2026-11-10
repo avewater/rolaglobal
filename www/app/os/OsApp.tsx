@@ -136,6 +136,27 @@ export default function OsApp() {
         notify: setToast,
         reload: load,
         accountFor: canAccounts ? (leadId) => accounts.find((a) => a.lead === leadId) : undefined,
+        convert:
+          canAccounts && data.user.perms.includes('edit_leads')
+            ? async (ids: string[], openAfter?: boolean) => {
+                const r = await fetch('/api/os/leads/convert', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ids }) });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok) {
+                  setToast(j.error || 'Could not convert.');
+                  return 0;
+                }
+                const accs: Account[] = j.accounts ?? [];
+                setAccounts((xs) => [...accs, ...xs]);
+                setItems((xs) => [...(j.items ?? []), ...xs]);
+                const skip = (j.skipped ?? []).length;
+                setToast(`${accs.length} account${accs.length === 1 ? '' : 's'} created${skip ? `, ${skip} skipped (already converted or Do Not Contact)` : ''}.`);
+                if (openAfter && accs[0]) {
+                  setOpenId(null);
+                  go('accounts', accs[0].id);
+                }
+                return accs.length;
+              }
+            : undefined,
         toAccount: canAccounts
           ? (lead, existing) => {
               setOpenId(null);

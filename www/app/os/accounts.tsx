@@ -100,7 +100,8 @@ export function ItemRow({ item, cx, showAccount, onEdit }: { item: Item; cx: Acx
   };
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText([item.subject ? `Subject: ${item.subject}` : '', item.body].filter(Boolean).join('\n\n'));
+      const me = cx.user.name.split(' ')[0];
+      await navigator.clipboard.writeText([item.subject ? `Subject: ${item.subject}` : '', item.body].filter(Boolean).join('\n\n').replaceAll('{my_name}', me));
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {}

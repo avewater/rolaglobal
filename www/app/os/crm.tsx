@@ -65,6 +65,7 @@ export type Crm = {
   reload: () => void;
   accountFor?: (leadId: string) => Account | undefined;
   toAccount?: (lead: Contact, existing?: Account) => void;
+  convert?: (ids: string[], openAfter?: boolean) => Promise<number>;
 };
 
 function Pill({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: 'ok' | 'warn' | 'bad' | 'neutral' }) {
@@ -191,7 +192,11 @@ export function Pipeline({ crm }: { crm: Crm }) {
   const [sort, setSort] = useState<{ k: SortKey; dir: 1 | -1 }>({ k: 'next_action_due', dir: 1 });
   const [adding, setAdding] = useState(false);
   const [over, setOver] = useState('');
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [converting, setConverting] = useState(false);
   const t = todayET();
+  const hasAccount = (id: string) => !!crm.accountFor?.(id);
+  const canPick = (l: Contact) => !!crm.convert && !l.dnc && !hasAccount(l.id);
 
   useEffect(() => store.set('os.view', view), [view]);
 
@@ -212,6 +217,17 @@ export function Pipeline({ crm }: { crm: Crm }) {
     const order = (l: Contact) => (sort.k === 'stage' ? String(LEAD_STAGES.indexOf(l.stage as any)).padStart(2, '0') : String((l as any)[sort.k] || (sort.dir === 1 ? '￿' : '')));
     return [...leads].filter((l) => showClosed || !CLOSED_STAGES.includes(l.stage)).sort((a, b) => order(a).localeCompare(order(b)) * sort.dir);
   }, [leads, sort, showClosed]);
+
+  const pickable = sorted.filter(canPick);
+  const togglePick = (id: string) => setPicked((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const convertPicked = async () => {
+    const ids = [...picked].filter((id) => crm.leads.some((l) => l.id === id && canPick(l))).slice(0, 50);
+    if (!ids.length || !crm.convert) return;
+    setConverting(true);
+    await crm.convert(ids);
+    setConverting(false);
+    setPicked(new Set());
+  };
 
   const head = (k: SortKey, label: string) => (
     <th aria-sort={sort.k === k ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
@@ -243,6 +259,17 @@ export function Pipeline({ crm }: { crm: Crm }) {
         </label>
         {crm.canEdit && <button className="aos-btn aos-btn-sm" onClick={() => setAdding(true)}>New lead</button>}
       </div>
+
+      {view === 'list' && crm.convert && picked.size > 0 && (
+        <div className="aos-toolbar aos-bulkbar">
+          <strong>{picked.size} selected</strong>
+          <button className="aos-btn aos-btn-sm" disabled={converting || picked.size > 50} onClick={convertPicked}>
+            {converting ? 'Converting' : `Convert ${picked.size} to account${picked.size === 1 ? '' : 's'}`}
+          </button>
+          <button className="aos-chip" onClick={() => setPicked(new Set())}>Clear</button>
+          {picked.size > 50 && <span className="aos-small aos-due">50 at a time, please.</span>}
+        </div>
+      )}
 
       {!crm.leads.length && <p className="aos-muted">No leads yet. {crm.canImport ? 'Use Import to bring in the Master Pipeline, or add one with New lead.' : 'Add one with New lead.'}</p>}
 
@@ -297,6 +324,7 @@ export function Pipeline({ crm }: { crm: Crm }) {
                     <div className="aos-chips">
                       {l.owner && <Pill>{l.owner}</Pill>}
                       {l.dnc && <Pill tone="bad">Do not contact</Pill>}
+                      {hasAccount(l.id) && <Pill tone="ok">Account</Pill>}
                       {l.pinned_note && <Pill tone="warn">Note</Pill>}
                     </div>
                   </article>
@@ -310,6 +338,16 @@ export function Pipeline({ crm }: { crm: Crm }) {
           <table className="aos-table">
             <thead>
               <tr>
+                {crm.convert && (
+                  <th className="aos-pick">
+                    <input
+                      type="checkbox"
+                      aria-label="Select all leads that can be converted"
+                      checked={pickable.length > 0 && pickable.every((l) => picked.has(l.id))}
+                      onChange={(e) => setPicked(e.target.checked ? new Set(pickable.map((l) => l.id)) : new Set())}
+                    />
+                  </th>
+                )}
                 {head('name', 'Name')}
                 {head('organization', 'Organization')}
                 {head('stage', 'Stage')}
@@ -323,6 +361,15 @@ export function Pipeline({ crm }: { crm: Crm }) {
             <tbody>
               {sorted.map((l) => (
                 <tr key={l.id} onClick={() => crm.open(l.id)} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && crm.open(l.id)}>
+                  {crm.convert && (
+                    <td className="aos-pick" onClick={(e) => e.stopPropagation()}>
+                      {canPick(l) ? (
+                        <input type="checkbox" aria-label={`Select ${l.name}`} checked={picked.has(l.id)} onChange={() => togglePick(l.id)} />
+                      ) : hasAccount(l.id) ? (
+                        <span className="aos-small aos-muted" title="Already has an account">Acct</span>
+                      ) : null}
+                    </td>
+                  )}
                   <td className="aos-row-title">{l.name}</td>
                   <td>{l.organization || l.institution}</td>
                   <td><Pill tone={stageTone(l.stage)}>{l.stage}</Pill></td>
@@ -338,6 +385,7 @@ export function Pipeline({ crm }: { crm: Crm }) {
           {!sorted.length && crm.leads.length > 0 && <p className="aos-muted aos-small">No leads match.</p>}
         </div>
       )}
+      {view === 'list' && crm.convert && <p className="aos-muted aos-small">Tick leads in the list and press Convert to turn them into accounts in one go.</p>}
       {crm.canEdit && <p className="aos-muted aos-small">Drag a card to change its stage, or open it. Closing a lead or marking Do Not Contact asks for a reason.</p>}
       {adding && <NewLead crm={crm} onClose={() => setAdding(false)} />}
     </div>
@@ -621,8 +669,15 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
                     <button className="aos-chip aos-chip-lg aos-self-start" onClick={() => crm.toAccount!(lead, acc)}>Open account: {acc.name}</button>
                   ) : (
                     <>
-                      <button className="aos-chip aos-chip-lg aos-self-start" onClick={() => crm.toAccount!(lead)}>Create account from this lead</button>
-                      <span className="aos-small aos-muted">Tasks, notes and message drafts live in accounts.</span>
+                      <div className="aos-chips">
+                        {crm.convert && !lead.dnc && (
+                          <button className="aos-btn aos-btn-sm" disabled={busy === 'convert'} onClick={async () => { setBusy('convert'); await crm.convert!([lead.id], true); setBusy(''); }}>
+                            {busy === 'convert' ? 'Converting' : 'Convert to account'}
+                          </button>
+                        )}
+                        <button className="aos-chip aos-chip-lg" onClick={() => crm.toAccount!(lead)}>Create account by hand</button>
+                      </div>
+                      <span className="aos-small aos-muted">Convert copies the contact details, sets a first task for you, and carries the drafted message over.</span>
                     </>
                   );
                 })()}
