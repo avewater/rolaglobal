@@ -6,9 +6,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { OUTREACH, TOUCH_GOAL, isOpenStage, type Account, type Contact, type Item } from '@/lib/os-roles';
 import { api, fmtDate, todayET } from './crm';
 import type { Acx } from './accounts';
+import { checkDraft } from '@/lib/os-checks';
 
 type View = 'ready' | 'rein' | 'approvals' | 'send' | 'scheduled';
-type Stats = { stopLoss: { sent: number; replies: number; window: number; threshold: number }; sentToday: number; cap: number };
+type Stats = { stopLoss: { sent: number; replies: number; window: number; threshold: number }; sentToday: number; cap: number; aiInstant: boolean };
 
 export function OutreachView({ cx, convert }: { cx: Acx; convert?: (ids: string[]) => Promise<number> }) {
   const approver = cx.user.perms.includes('approve_outreach');
@@ -91,14 +92,14 @@ export function OutreachView({ cx, convert }: { cx: Acx; convert?: (ids: string[
         </div>
       )}
       {view === 'ready' && (
-        <Prep cx={cx} needResearch={needResearch} needAccount={needAccount} readyToDraft={readyToDraft} accFor={accFor} convert={convert} onDrafted={(its) => cx.setItems((xs) => [...its, ...xs])} />
+        <Prep cx={cx} aiInstant={!!stats?.aiInstant} needResearch={needResearch} needAccount={needAccount} readyToDraft={readyToDraft} accFor={accFor} convert={convert} onDrafted={(its) => cx.setItems((xs) => [...its, ...xs])} />
       )}
     </div>
   );
 }
 
-function Prep({ cx, needResearch, needAccount, readyToDraft, accFor, convert, onDrafted }: {
-  cx: Acx; needResearch: Contact[]; needAccount: Contact[]; readyToDraft: Contact[]; accFor: (id: string) => Account | undefined; convert?: (ids: string[]) => Promise<number>; onDrafted: (its: Item[]) => void;
+function Prep({ cx, aiInstant, needResearch, needAccount, readyToDraft, accFor, convert, onDrafted }: {
+  cx: Acx; aiInstant: boolean; needResearch: Contact[]; needAccount: Contact[]; readyToDraft: Contact[]; accFor: (id: string) => Account | undefined; convert?: (ids: string[]) => Promise<number>; onDrafted: (its: Item[]) => void;
 }) {
   const [busy, setBusy] = useState('');
   const draft = async (l: Contact) => {
@@ -124,12 +125,13 @@ function Prep({ cx, needResearch, needAccount, readyToDraft, accFor, convert, on
   return (
     <div className="aos-stack-lg">
       <section className="aos-stack">
-        <div className="aos-row-head"><div className="aos-eyebrow">Ready for AI drafts ({readyToDraft.length})</div>{readyToDraft.length > 1 && <button className="aos-btn aos-btn-sm" disabled={!!busy} onClick={draftAll}>Draft all</button>}</div>
+        {!aiInstant && readyToDraft.length > 0 && <p className="aos-notebox aos-small">These are drafted automatically on the next AI run (weekdays around 10am, 1pm and 4pm Pacific). Drafts then appear in Rein review.</p>}
+        <div className="aos-row-head"><div className="aos-eyebrow">Ready for AI drafts ({readyToDraft.length})</div>{aiInstant && readyToDraft.length > 1 && <button className="aos-btn aos-btn-sm" disabled={!!busy} onClick={draftAll}>Draft all</button>}</div>
         {readyToDraft.map((l) => (
           <article key={l.id} className="aos-row">
             <div className="aos-row-head"><span className="aos-row-title">{l.name}</span>{l.rel_strength && <span className="aos-pill">{l.rel_strength}</span>}</div>
             <div className="aos-small aos-muted">{l.current_work}</div>
-            <div className="aos-chips"><button className="aos-btn aos-btn-sm" disabled={!!busy} onClick={async () => { if (await draft(l)) cx.notify(`Drafted 3 messages for ${l.name}.`); }}>{busy === l.id ? 'Drafting' : 'Draft with AI'}</button><button className="aos-ghost" onClick={() => cx.openLead(l.id)}>Open lead</button></div>
+            <div className="aos-chips">{aiInstant ? <button className="aos-btn aos-btn-sm" disabled={!!busy} onClick={async () => { if (await draft(l)) cx.notify(`Drafted 3 messages for ${l.name}.`); }}>{busy === l.id ? 'Drafting' : 'Draft with AI'}</button> : <span className="aos-pill">Next AI run</span>}<button className="aos-ghost" onClick={() => cx.openLead(l.id)}>Open lead</button></div>
           </article>
         ))}
         {!readyToDraft.length && <p className="aos-muted aos-small">None. Leads show here once they have research notes and an account.</p>}
@@ -195,8 +197,10 @@ function TouchGroup({ cx, account, items, mode, onChange }: { cx: Acx; account?:
     return call('edit', { id: i.id, body });
   };
   const saveAll = async () => { for (const i of open) if (!(await save(i))) return false; return true; };
-  const hard = (f: string) => f.split('\n').filter((x) => x && (x.startsWith('Contains') || x.startsWith('Fill in') || x.startsWith('Touch 1 has')));
-  const blocked = open.some((i) => hard(i.flags).length);
+  const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
+  const others = cx.items.filter((x) => x.touch === 1 && x.account !== account?.id && x.created >= weekAgo).map((x) => x.body);
+  const live = (i: Item) => checkDraft(drafts[i.id] ?? i.body, { touch: i.touch, currentWork: lead?.current_work, others: i.touch === 1 ? others : [] });
+  const blocked = open.some((i) => live(i).hard.length);
   return (
     <section className="aos-panel aos-stack">
       <div className="aos-row-head">
@@ -214,11 +218,15 @@ function TouchGroup({ cx, account, items, mode, onChange }: { cx: Acx; account?:
         <div key={i.id} className="aos-stack">
           <div className="aos-eyebrow">Touch {i.touch} · {TOUCH_GOAL[i.touch]}{i.touch === 1 ? ' · day 0' : i.touch === 2 ? ' · day 4' : ' · day 9 to 10'}</div>
           <textarea className="aos-input" rows={i.touch === 1 ? 6 : 5} value={drafts[i.id] ?? i.body} onChange={(e) => setDrafts((d) => ({ ...d, [i.id]: e.target.value }))} onBlur={() => save(i)} maxLength={2000} disabled={mode === 'approve' && !approver} />
-          {i.flags && (
-            <ul className="aos-flags">
-              {i.flags.split('\n').filter(Boolean).map((f) => <li key={f} className={hard(f).length ? 'aos-due' : 'aos-muted'}>{f}</li>)}
-            </ul>
-          )}
+          {(() => {
+            const c = live(i);
+            return c.hard.length + c.soft.length > 0 ? (
+              <ul className="aos-flags">
+                {c.hard.map((f) => <li key={f} className="aos-due">{f}</li>)}
+                {c.soft.map((f) => <li key={f} className="aos-muted">{f}</li>)}
+              </ul>
+            ) : null;
+          })()}
         </div>
       ))}
       <div className="aos-chips">

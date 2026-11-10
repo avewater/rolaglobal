@@ -58,7 +58,7 @@ export function effectivePerms(role: Role, grant: string[] = [], revoke: string[
 
 export type SectionKey =
   | 'queue' | 'tasks' | 'accounts' | 'drafts' | 'pipeline'
-  | 'today' | 'schools' | 'reports' | 'decisions' | 'agents' | 'import' | 'profile' | 'connections' | 'outreach';
+  | 'today' | 'schools' | 'reports' | 'decisions' | 'agents' | 'import' | 'profile' | 'connections' | 'outreach' | 'team';
 export type SectionGroup = 'Work' | 'Overview' | 'Intelligence' | 'Settings';
 export const SECTIONS: { key: SectionKey; label: string; perm: Perm | null; group: SectionGroup }[] = [
   { key: 'queue', label: 'My Queue', perm: null, group: 'Work' },
@@ -70,6 +70,7 @@ export const SECTIONS: { key: SectionKey; label: string; perm: Perm | null; grou
   { key: 'connections', label: 'Connections', perm: 'edit_leads', group: 'Work' },
   { key: 'today', label: 'Dashboard', perm: 'today', group: 'Overview' },
   { key: 'schools', label: 'Schools', perm: 'pipeline', group: 'Overview' },
+  { key: 'team', label: 'Team report', perm: 'manage_team', group: 'Intelligence' },
   { key: 'reports', label: 'Reports', perm: 'reports', group: 'Intelligence' },
   { key: 'decisions', label: 'Decisions', perm: 'decisions', group: 'Intelligence' },
   { key: 'agents', label: 'Agents', perm: 'agents', group: 'Intelligence' },

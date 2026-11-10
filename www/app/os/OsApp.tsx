@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ApiError, ImportView, LeadDrawer, MoveDialog, Pipeline, Queue, api, type Crm } from './crm';
 import { ConnectionsView } from './connections';
 import { OutreachView } from './outreach';
+import { TeamReport } from './team';
 import { AccountsView, DraftsView, DueForMe, TasksView, type Acx } from './accounts';
 import { ProfileForm } from './profile';
 import {
@@ -222,6 +223,7 @@ export default function OsApp() {
         {section === 'import' && <ImportView crm={crm} />}
         {section === 'connections' && <ConnectionsView crm={crm} />}
         {section === 'outreach' && <OutreachView cx={cx} convert={crm.convert} />}
+        {section === 'team' && <TeamReport go={go} />}
         {section === 'schools' && <Schools data={data} />}
         {section === 'reports' && <Reports data={data} />}
         {section === 'decisions' && <Decisions data={data} />}

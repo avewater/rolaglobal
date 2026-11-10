@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
   const sentToday = (await listAll(OS_TABLES.items, { fields: ['done_at'], filterByFormula: `AND({touch} > 0, {status} = 'Sent', IS_AFTER({done_at}, '${addDays(todayET(), -1)}'))`, max: 200 })).filter(
     (r) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(str(r.fields.done_at))) === todayET(),
   ).length;
-  return NextResponse.json({ stopLoss: { sent: sent.length, replies, window: OUTREACH.stopLossWindow, threshold: OUTREACH.stopLossReplies }, sentToday, cap: OUTREACH.dailyCap });
+  return NextResponse.json({ stopLoss: { sent: sent.length, replies, window: OUTREACH.stopLossWindow, threshold: OUTREACH.stopLossReplies }, sentToday, cap: OUTREACH.dailyCap, aiInstant: !!process.env.ANTHROPIC_API_KEY });
 }
 
 export async function POST(req: NextRequest) {
