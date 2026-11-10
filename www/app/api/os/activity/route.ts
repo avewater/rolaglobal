@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OS_TABLES, getRecord, updateRecord } from '@/lib/os-airtable';
+import { OS_TABLES, getRecord, listAll, updateRecord } from '@/lib/os-airtable';
 import { logActivity, parseMentions, readActivity, readLead, todayET } from '@/lib/os-leads';
 import { can, getUser } from '@/lib/os-session';
 import { CLOSED_STAGES } from '@/lib/os-roles';
@@ -57,6 +57,14 @@ export async function POST(req: NextRequest) {
     }
     if (Object.keys(fields).length) updated = await updateRecord(OS_TABLES.contacts, lead.id, fields);
     if (moveToReplied) await logActivity(lead.id, { type: 'Stage change', summary: `${lead.stage} to Replied`, by: user.name, from_stage: lead.stage, to_stage: 'Replied' });
+    // Any reply stops the rest of the LinkedIn outreach sequence for this lead's account.
+    if (b.type === 'Reply received') {
+      const accs = await listAll(OS_TABLES.accounts, { fields: ['lead_rec'], filterByFormula: `{lead_rec} = '${lead.id}'`, max: 5 });
+      for (const acc of accs) {
+        const open = await listAll(OS_TABLES.items, { fields: ['status'], filterByFormula: `AND({account_rec} = '${acc.id}', {touch} > 0, {status} = 'Open')`, max: 10 });
+        for (const it of open) await updateRecord(OS_TABLES.items, it.id, { review: 'Stopped' });
+      }
+    }
     return NextResponse.json({ ok: true, activity: readActivity(act), lead: readLead(updated, can(user, 'see_contact')) });
   } catch (e) {
     console.error('activity', e);

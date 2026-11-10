@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OS_TABLES, formulaString, getRecord, listAll, updateRecord } from '@/lib/os-airtable';
 import { logActivity, readActivity, readLead, todayET } from '@/lib/os-leads';
 import { can, getUser } from '@/lib/os-session';
-import { DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES, HOST_TYPES, isOpenStage } from '@/lib/os-roles';
+import { DISPOSITION_REASONS, GRADES, LEAD_STAGES, OWNERS, REASON_STAGES, SOURCES, HOST_TYPES, LANES, REL_STRENGTHS, isOpenStage } from '@/lib/os-roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,6 +88,22 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       text('draft_subject', 200);
       text('draft_message', 4000);
       text('pinned_note', 2000);
+      text('current_work', 1000);
+      text('must_mention', 500);
+      // Email consent: only recorded with the date and the message where they agreed.
+      if ('email_consent' in inF) {
+        if (inF.email_consent === true) {
+          const note = typeof inF.email_consent_note === 'string' ? inF.email_consent_note.trim().slice(0, 2000) : '';
+          if (!note) return bad('Paste the message where they agreed to email.');
+          out.email_consent = true;
+          out.email_consent_on = isDate(inF.email_consent_on) ? inF.email_consent_on : todayET();
+          out.email_consent_note = note;
+        } else {
+          out.email_consent = false;
+          out.email_consent_on = null;
+          out.email_consent_note = null;
+        }
+      }
       if ('linkedin_url' in inF) {
         const u = String(inF.linkedin_url || '').trim();
         if (u && !/^https:\/\/([a-z]+\.)?linkedin\.com\//i.test(u)) return bad('LinkedIn link must start with https://www.linkedin.com/');
@@ -108,7 +124,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
         out[target] = inF[k];
         return true;
       };
-      if (!sel('grade', 'grade', GRADES) || !sel('owner', 'lead_owner', OWNERS) || !sel('source', 'lead_source', SOURCES) || !sel('host_type', 'host_type', HOST_TYPES))
+      if (!sel('grade', 'grade', GRADES) || !sel('owner', 'lead_owner', OWNERS) || !sel('source', 'lead_source', SOURCES) || !sel('host_type', 'host_type', HOST_TYPES) || !sel('lane', 'lane', LANES) || !sel('rel_strength', 'rel_strength', REL_STRENGTHS))
         return bad('One of the choices is not on the list.');
       if (can(user, 'see_contact')) {
         if ('email' in inF) {
@@ -126,6 +142,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       }
       if (!Object.keys(out).length) return NextResponse.json({ ok: true, lead });
       const updated = await updateRecord(OS_TABLES.contacts, id, out);
+      if (out.email_consent === true && !lead.email_consent)
+        await logActivity(id, { type: 'Note', summary: 'Agreed to email', body: String(out.email_consent_note), by: user.name });
       if ('pinned_note' in out && out.pinned_note !== lead.pinned_note)
         await logActivity(id, { type: 'Note', summary: out.pinned_note ? 'Pinned note updated' : 'Pinned note cleared', body: String(out.pinned_note || ''), by: user.name });
       return NextResponse.json({ ok: true, lead: readLead(updated, can(user, 'see_contact')) });

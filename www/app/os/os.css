@@ -267,3 +267,9 @@ a.aos-chip { color: var(--fg); text-decoration: none; }
 .aos-draft { background: var(--card); border: 1px solid var(--line); padding: 12px 14px; display: grid; gap: 6px; border-radius: 2px; }
 .aos-pick { width: 36px; text-align: center; }
 .aos-bulkbar { position: sticky; top: 56px; z-index: 5; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.aos-panel { background: var(--card); border: 1px solid var(--line); border-radius: 2px; padding: 14px 16px; }
+.aos-flags { margin: 0; padding-left: 18px; font-size: 13px; }
+.aos-send { max-width: 560px; }
+.aos-send-msg { background: var(--bg); border: 1px solid var(--line); padding: 12px 14px; white-space: pre-wrap; font-size: 15px; line-height: 1.5; }
+.aos-steps { margin: 0; padding-left: 18px; }
+.aos-btn-gold { background: var(--gold-dk); border-color: var(--gold-dk); }

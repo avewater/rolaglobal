@@ -8,6 +8,7 @@ export const LEAD_FIELDS = [
   'name', 'title', 'organization', 'institution', 'pipeline_stage', 'stage', 'grade', 'lead_owner', 'owner', 'source', 'lead_source', 'host_type', 'found_url', 'fit_reason', 'found_on', 'draft_subject', 'draft_message', 'notes',
   'channel', 'warm_path', 'athlete_reach', 'next_action', 'next_action_due', 'last_touch', 'stage_changed_at', 'pinned_note',
   'disposition_reason', 'do_not_contact', 'linkedin_url',
+  'lane', 'rel_strength', 'current_work', 'must_mention', 'li_connected_on', 'email_consent', 'email_consent_on', 'email_consent_note',
 ];
 export const CONTACT_FIELDS = ['email', 'phone'];
 
@@ -45,6 +46,14 @@ export function readLead(r: AirtableRecord, seeContact: boolean, instName?: Map<
     disposition_reason: str(f.disposition_reason),
     dnc: f.do_not_contact === true || stage === 'Do Not Contact',
     linkedin_url: str(f.linkedin_url),
+    lane: str(f.lane) || (str(f.li_connected_on) ? 'A' : 'B'),
+    rel_strength: str(f.rel_strength),
+    current_work: str(f.current_work),
+    must_mention: str(f.must_mention),
+    li_connected_on: str(f.li_connected_on),
+    email_consent: f.email_consent === true,
+    email_consent_on: str(f.email_consent_on),
+    email_consent_note: str(f.email_consent_note),
     ...(seeContact ? { email: str(f.email), phone: str(f.phone) } : {}),
   };
 }

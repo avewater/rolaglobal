@@ -23,6 +23,7 @@ export const PERMS = [
   'import_leads',
   'accounts',
   'assign_tasks',
+  'approve_outreach',
 ] as const;
 export type Perm = (typeof PERMS)[number];
 
@@ -57,7 +58,7 @@ export function effectivePerms(role: Role, grant: string[] = [], revoke: string[
 
 export type SectionKey =
   | 'queue' | 'tasks' | 'accounts' | 'drafts' | 'pipeline'
-  | 'today' | 'schools' | 'reports' | 'decisions' | 'agents' | 'import' | 'profile';
+  | 'today' | 'schools' | 'reports' | 'decisions' | 'agents' | 'import' | 'profile' | 'connections' | 'outreach';
 export type SectionGroup = 'Work' | 'Overview' | 'Intelligence' | 'Settings';
 export const SECTIONS: { key: SectionKey; label: string; perm: Perm | null; group: SectionGroup }[] = [
   { key: 'queue', label: 'My Queue', perm: null, group: 'Work' },
@@ -65,6 +66,8 @@ export const SECTIONS: { key: SectionKey; label: string; perm: Perm | null; grou
   { key: 'accounts', label: 'Accounts', perm: 'accounts', group: 'Work' },
   { key: 'drafts', label: 'Drafts', perm: 'accounts', group: 'Work' },
   { key: 'pipeline', label: 'Leads', perm: 'pipeline', group: 'Work' },
+  { key: 'outreach', label: 'LinkedIn outreach', perm: 'edit_leads', group: 'Work' },
+  { key: 'connections', label: 'Connections', perm: 'edit_leads', group: 'Work' },
   { key: 'today', label: 'Dashboard', perm: 'today', group: 'Overview' },
   { key: 'schools', label: 'Schools', perm: 'pipeline', group: 'Overview' },
   { key: 'reports', label: 'Reports', perm: 'reports', group: 'Intelligence' },
@@ -158,6 +161,11 @@ export type Item = {
   done_at: string;
   done_by: string;
   created: string;
+  touch: number;
+  review: string;
+  flags: string;
+  ai_drafted: boolean;
+  linkedin_url: string;
 };
 export const isTask = (i: Pick<Item, 'kind' | 'due_date'>) => i.kind === 'Entry' && !!i.due_date;
 export const itemLabel = (i: Pick<Item, 'kind' | 'due_date'>) =>
@@ -192,6 +200,14 @@ export type Contact = {
   disposition_reason: string;
   dnc: boolean;
   linkedin_url: string;
+  lane: string;
+  rel_strength: string;
+  current_work: string;
+  must_mention: string;
+  li_connected_on: string;
+  email_consent: boolean;
+  email_consent_on: string;
+  email_consent_note: string;
   email?: string;
   phone?: string;
 };
@@ -217,3 +233,21 @@ export type OsData = {
   agents?: Agent[];
   errors: string[];
 };
+
+// LinkedIn-first outreach (Lane A). Agreed Nov 10, 2026 in the Warm Outreach Engine proposal.
+export const LANES = ['A', 'B'] as const;
+export const REL_STRENGTHS = ['Strong', 'Some', 'Weak'] as const;
+export const OUTREACH = {
+  // Days after Touch 1 for each touch. Lane B keeps the Playbook cadence.
+  laneA: [0, 4, 9] as const,
+  laneB: [0, 8, 19] as const,
+  dailyCap: 10,
+  // For the first weeks every AI draft goes to Rein before Michael. Set false to skip her step.
+  reinFirst: true,
+  // Stop-loss: fewer than this many replies from the first 50 Touch 1 messages means rework the message.
+  stopLossReplies: 10,
+  stopLossWindow: 50,
+};
+export const TOUCH_GOAL: Record<number, string> = { 1: 'Get a reply', 2: 'Give value', 3: 'Close the loop' };
+export const CONNECTION_TRIAGE = ['Untriaged', 'Fit', 'Not now', 'No'] as const;
+export type Connection = { id: string; name: string; title: string; company: string; email: string; linkedin_url: string; connected_on: string; triage: string; lead: string; score: number };

@@ -82,6 +82,17 @@ export function ItemRow({ item, cx, showAccount, onEdit }: { item: Item; cx: Acx
   const overdue = !done && item.due_date && item.due_date < today;
   const mine = item.assignee === cx.user.id || item.created_by_rec === cx.user.id;
   const canChange = mine || isAdmin(cx);
+  if (item.touch > 0)
+    return (
+      <article className="aos-row">
+        <div className="aos-row-head">
+          <span className="aos-row-title">LinkedIn touch {item.touch}{item.to_name ? ` to ${item.to_name}` : ''}</span>
+          <span className="aos-pill">{item.status === 'Sent' ? `Sent ${item.done_at ? new Date(item.done_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}` : item.review === 'Stopped' ? 'Stopped' : item.review === 'Approved' ? (item.due_date ? `Approved, send ${item.due_date}` : 'Approved, waiting on previous touch') : `With ${item.review || 'Rein'}`}</span>
+        </div>
+        <div className="aos-body aos-small">{item.body}</div>
+        {item.status === 'Open' && item.review !== 'Stopped' && <button className="aos-ghost aos-self-start" onClick={() => cx.go('outreach')}>Open in LinkedIn outreach</button>}
+      </article>
+    );
   const act = async (action: string, extra: Record<string, unknown> = {}) => {
     if (action === 'delete' && !window.confirm('Delete this for good?')) return;
     setBusy(action);
@@ -356,7 +367,7 @@ export function DraftsView({ cx }: { cx: Acx }) {
   const [view, setView] = useState<DraftView>('drafts');
   const [editing, setEditing] = useState<Item | null>(null);
   const [scope, setScope] = useState('me');
-  const msgs = cx.items.filter((i) => i.kind === 'Message' && (scope === 'all' || i.assignee === cx.user.id));
+  const msgs = cx.items.filter((i) => i.kind === 'Message' && !i.touch && (scope === 'all' || i.assignee === cx.user.id));
   const lists: Record<DraftView, Item[]> = {
     drafts: msgs.filter((i) => i.status === 'Open' && !i.due_date).sort((a, b) => b.created.localeCompare(a.created)),
     scheduled: msgs.filter((i) => i.status === 'Open' && i.due_date).sort(byDue),
@@ -750,7 +761,7 @@ function EditAccount({ cx, account, onClose }: { cx: Acx; account: Account; onCl
 
 export function DueForMe({ cx }: { cx: Acx }) {
   const today = localToday();
-  const due = cx.items.filter((i) => i.status === 'Open' && i.kind !== 'Update' && i.assignee === cx.user.id && i.due_date && i.due_date <= today).sort(byDue);
+  const due = cx.items.filter((i) => i.status === 'Open' && !i.touch && i.kind !== 'Update' && i.assignee === cx.user.id && i.due_date && i.due_date <= today).sort(byDue);
   return (
     <section className="aos-stack">
       <div className="aos-row-head">

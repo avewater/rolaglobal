@@ -13,6 +13,7 @@ export const OS_TABLES = {
   activity: 'tbl2qnsmqNVDtzhfZ',
   accounts: 'tbl2nGeTWCwOcpNTY',
   items: 'tbl4rTnvpadx2OGBx',
+  connections: 'tblOt8mU07tVf09pm',
 } as const;
 
 export type AirtableRecord = { id: string; createdTime: string; fields: Record<string, unknown> };

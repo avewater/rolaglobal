@@ -3,7 +3,7 @@ import { OS_TABLES, getRecord, list, str, type AirtableRecord } from './os-airta
 import { CHANNELS, effectivePerms, isRole, type Account, type Item, type OsUser } from './os-roles';
 
 export const ACCOUNT_READ = ['name', 'account_type', 'title', 'organization', 'email', 'phone', 'linkedin', 'instagram', 'x', 'tiktok', 'website', 'about', 'lead_rec', 'owner_name', 'created_by'];
-export const ITEM_READ = ['title', 'account_rec', 'kind', 'body', 'due_date', 'due_time', 'status', 'assignee_rec', 'assignee_name', 'created_by', 'created_by_rec', 'channel', 'to_name', 'subject', 'done_at', 'done_by'];
+export const ITEM_READ = ['title', 'account_rec', 'kind', 'body', 'due_date', 'due_time', 'status', 'assignee_rec', 'assignee_name', 'created_by', 'created_by_rec', 'channel', 'to_name', 'subject', 'done_at', 'done_by', 'touch', 'review', 'flags', 'ai_drafted', 'linkedin_url'];
 
 export function readAccount(r: AirtableRecord): Account {
   const f = r.fields;
@@ -51,6 +51,11 @@ export function readItem(r: AirtableRecord): Item {
     done_at: str(f.done_at),
     done_by: str(f.done_by),
     created: r.createdTime,
+    touch: typeof f.touch === 'number' ? f.touch : 0,
+    review: str(f.review),
+    flags: str(f.flags),
+    ai_drafted: f.ai_drafted === true,
+    linkedin_url: str(f.linkedin_url),
   };
 }
 

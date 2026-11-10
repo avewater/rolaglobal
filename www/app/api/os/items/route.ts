@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
     }
     if (b.action === 'sent' || b.action === 'unsend') {
       if (item.kind !== 'Message') throw new Refuse('Only messages can be marked sent.');
+      if (item.touch > 0) throw new Refuse('LinkedIn outreach messages are sent from the LinkedIn outreach screen.');
       if (item.assignee !== user.id && !admin) throw new Refuse('Only the person who drafted this message can mark it sent.', 403);
       // If the account came from a lead, a sent message counts as a touch on that lead, and Do Not Contact blocks it.
       if (b.action === 'sent') {

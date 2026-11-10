@@ -12,6 +12,8 @@ import {
   REASON_STAGES,
   SOURCES,
   HOST_TYPES,
+  LANES,
+  REL_STRENGTHS,
   isOpenStage,
   ownerFor,
   type Account,
@@ -709,6 +711,11 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
               </div>
               <dl className="aos-dl">
                 {lead.warm_path && <><dt>{lead.source === 'Referral' ? 'Referred by' : 'Warm path'}</dt><dd>{lead.warm_path}</dd></>}
+                {lead.lane && <><dt>Lane</dt><dd>{lead.lane === 'A' ? 'A: LinkedIn first (Michael\'s connection)' : 'B: email first'}</dd></>}
+                {lead.rel_strength && <><dt>Relationship</dt><dd>{lead.rel_strength}</dd></>}
+                {lead.current_work && <><dt>Working on now</dt><dd>{lead.current_work}</dd></>}
+                {lead.must_mention && <><dt>Must mention</dt><dd>{lead.must_mention}</dd></>}
+                {lead.lane === 'A' && <><dt>Email consent</dt><dd>{lead.email_consent ? `Yes, ${fmtDate(lead.email_consent_on)}: "${lead.email_consent_note}"` : 'Not yet. Email only after they agree on LinkedIn.'}</dd></>}
                 {lead.fit_reason && <><dt>Why they fit</dt><dd>{lead.fit_reason}</dd></>}
                 {lead.notes && <><dt>Research notes</dt><dd className="aos-body">{lead.notes}</dd></>}
                 {lead.found_url && <><dt>Found at</dt><dd><a href={lead.found_url} target="_blank" rel="noopener noreferrer">{(() => { try { return new URL(lead.found_url).hostname.replace(/^www\./, ''); } catch { return 'Source page'; } })()}</a>{lead.found_on ? ` on ${fmtDate(lead.found_on)}` : ''}</dd></>}
@@ -716,7 +723,10 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
                 {lead.last_touch && <><dt>Last touch</dt><dd>{fmtDate(lead.last_touch)}</dd></>}
                 {lead.stage_changed_at && <><dt>In stage since</dt><dd>{fmtDate(lead.stage_changed_at)}</dd></>}
               </dl>
-              {crm.canEdit && <button className="aos-ghost aos-self-start" onClick={() => setEdit(true)}>Edit details</button>}
+              <div className="aos-chips">
+                {crm.canEdit && <button className="aos-ghost" onClick={() => setEdit(true)}>Edit details</button>}
+                {crm.canEdit && lead.lane === 'A' && !lead.email_consent && !lead.dnc && <ConsentButton lead={lead} crm={crm} onSaved={after} />}
+              </div>
             </section>
 
             {crm.canEdit && (
@@ -752,11 +762,45 @@ export function LeadDrawer({ id, crm, onClose }: { id: string; crm: Crm; onClose
   );
 }
 
+function ConsentButton({ lead, crm, onSaved }: { lead: Contact; crm: Crm; onSaved: (l: Contact) => void }) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try {
+      const r = await api<{ lead: Contact }>(`/api/os/lead/${lead.id}`, { action: 'update', fields: { email_consent: true, email_consent_note: note } });
+      crm.notify('Email consent recorded.');
+      onSaved(r.lead);
+      setOpen(false);
+    } catch (e) {
+      crm.notify(e instanceof Error ? e.message : 'Could not save.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <button className="aos-chip" onClick={() => setOpen(true)}>They agreed to email</button>
+      {open && (
+        <Modal title="Record email consent" onClose={() => setOpen(false)}>
+          <div className="aos-stack">
+            <p className="aos-small aos-muted">Paste the LinkedIn message where {lead.name.split(' ')[0]} agreed to receive email. Email is only sent to Lane A leads with this on file. Add their address with Edit details if it is new.</p>
+            <textarea className="aos-input" rows={4} value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} placeholder='e.g. "Sure, send it to jordan@school.edu"' />
+            <button className="aos-btn aos-btn-sm aos-self-start" disabled={!note.trim() || busy} onClick={save}>{busy ? 'Saving' : 'Save consent'}</button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
 function EditLead({ lead, crm, onClose, onSaved }: { lead: Contact; crm: Crm; onClose: () => void; onSaved: (l: Contact) => void }) {
   const init = {
     name: lead.name, title: lead.title, organization: lead.organization, owner: lead.owner, grade: lead.grade, source: lead.source, host_type: lead.host_type, fit_reason: lead.fit_reason, draft_subject: lead.draft_subject, draft_message: lead.draft_message,
     warm_path: lead.warm_path, athlete_reach: lead.athlete_reach ? String(lead.athlete_reach) : '', next_action: lead.next_action,
     next_action_due: lead.next_action_due, linkedin_url: lead.linkedin_url, email: lead.email ?? '', phone: lead.phone ?? '', pinned_note: lead.pinned_note,
+    lane: lead.lane, rel_strength: lead.rel_strength, current_work: lead.current_work, must_mention: lead.must_mention,
   };
   const [f, setF] = useState(init);
   const [busy, setBusy] = useState(false);
@@ -791,6 +835,10 @@ function EditLead({ lead, crm, onClose, onSaved }: { lead: Contact; crm: Crm; on
           <Sel label="Source" value={f.source} onChange={set('source')} opts={SOURCES} blank />
           <label className="aos-field"><span>Athlete reach (estimate)</span><input className="aos-input" inputMode="numeric" value={f.athlete_reach} onChange={set('athlete_reach')} /></label>
           <label className="aos-field aos-span2"><span>{f.source === 'Referral' ? 'Referred by' : 'Warm path'}</span><input className="aos-input" value={f.warm_path} onChange={set('warm_path')} placeholder={f.source === 'Referral' ? 'Who referred them, and how they know them' : 'Who can introduce us, and how'} /></label>
+          <Sel label="Lane" value={f.lane} onChange={set('lane')} opts={LANES} blank />
+          <Sel label="How well Michael knows them" value={f.rel_strength} onChange={set('rel_strength')} opts={REL_STRENGTHS} blank />
+          <label className="aos-field aos-span2"><span>What they're working on now (the AI builds the first line on this)</span><textarea className="aos-input" rows={2} value={f.current_work} onChange={set('current_work')} maxLength={1000} placeholder="A new role, a program they launched, a post they wrote. Something real and recent." /></label>
+          <label className="aos-field aos-span2"><span>Must mention (optional)</span><input className="aos-input" value={f.must_mention} onChange={set('must_mention')} maxLength={500} placeholder="e.g. we met at the NACDA convention" /></label>
           <label className="aos-field aos-span2"><span>Why they fit</span><textarea className="aos-input" rows={2} value={f.fit_reason} onChange={set('fit_reason')} maxLength={2000} /></label>
           <label className="aos-field aos-span2"><span>First message subject</span><input className="aos-input" value={f.draft_subject} onChange={set('draft_subject')} maxLength={200} /></label>
           <label className="aos-field aos-span2"><span>First message (sign it {'{my_name}'} and it fills in your name when copied)</span><textarea className="aos-input" rows={6} value={f.draft_message} onChange={set('draft_message')} maxLength={4000} /></label>
