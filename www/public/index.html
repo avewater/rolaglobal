@@ -132,6 +132,13 @@ img.mono { border: 0; background: none; object-fit: contain; }
 .band li b { font-weight: 600; }
 .band li span { color: rgba(255,255,255,0.7); font-size: 15px; text-align: right; }
 
+/* Photo backgrounds */
+.band, .connect.photo { position: relative; overflow: hidden; }
+.band-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.band::after, .connect.photo::after { content: ""; position: absolute; inset: 0; background: rgba(11,27,43,0.86); }
+.band .wrap, .connect.photo .wrap { position: relative; z-index: 1; }
+.connect.photo { border-top: 0; background: var(--navy); color: #fff; }
+
 /* Data index */
 .index-list { border-top: 2px solid var(--ink); }
 .idx { display: grid; grid-template-columns: 180px minmax(0, 1fr) auto; gap: 28px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--rule); }
@@ -308,6 +315,7 @@ footer a:hover { color: var(--ink); }
   </section>
 
   <section class="band" aria-labelledby="ws-title">
+    <img class="band-bg" src="/images/research/research-non-revenue-sports-1600.webp" alt="" loading="lazy" decoding="async">
     <div class="wrap">
       <div>
         <div class="eyebrow">Workshops</div>
@@ -345,10 +353,11 @@ footer a:hover { color: var(--ink); }
     </div>
   </section>
 
-  <section class="connect" aria-labelledby="connect-title">
+  <section class="connect photo" aria-labelledby="connect-title">
+    <img class="band-bg" src="/images/research/research-revenue-sharing-1600.webp" alt="" loading="lazy" decoding="async">
     <div class="wrap">
       <h2 id="connect-title">Bring ROLA research to your athletes.</h2>
-      <a class="btn btn-solid" href="/partner-inquiry">Request a Research Partnership</a>
+      <a class="btn btn-light" href="/partner-inquiry">Request a Research Partnership</a>
     </div>
   </section>
 </main>
