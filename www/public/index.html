@@ -116,6 +116,7 @@ section { padding-block: 80px; }
 .people { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
 .person { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 20px; align-items: start; }
 .mono { width: 96px; height: 96px; background: var(--soft); border: 1px solid var(--rule); display: grid; place-items: center; font-family: var(--serif); font-weight: 600; font-size: 32px; color: var(--gold); }
+img.mono { border: 0; background: none; object-fit: contain; }
 .person h3 { font-size: 22px; }
 .role { font-size: 14px; font-weight: 600; margin: 4px 0 8px; }
 .person p { margin: 0; font-size: 15px; color: var(--muted); }
@@ -325,9 +326,9 @@ footer a:hover { color: var(--ink); }
     <div class="wrap">
       <div class="sec-head"><h2 id="people-title">Our people</h2><a class="more" href="/about">About ROLA</a></div>
       <div class="people">
-        <div class="person"><div class="mono" aria-hidden="true">MA</div><div><h3>Michael Apan</h3><div class="role">Head of Research and Partnerships</div><p>Leads ROLA's research and institutional partnerships with athletic departments.</p></div></div>
-        <div class="person"><div class="mono" aria-hidden="true">SP</div><div><h3>Sid Peddinti</h3><div class="role">Legal Research and Workshops</div><p>Leads ROLA's nonprofit and foundation workshops for athletes.</p></div></div>
-        <div class="person"><div class="mono" aria-hidden="true">HS</div><div><h3>Hussain Saka</h3><div class="role">Athlete Community and Impact Lead</div><p>Represents the athlete voice and connects athletes with ROLA's executive team.</p></div></div>
+        <div class="person"><img class="mono" src="/images/people/michael-research-partnerships.svg" width="96" height="96" alt="" loading="lazy"><div><h3>Michael Apan</h3><div class="role">Head of Research and Partnerships</div><p>Leads ROLA's research and institutional partnerships with athletic departments.</p></div></div>
+        <div class="person"><img class="mono" src="/images/people/sid-legal-workshops.svg" width="96" height="96" alt="" loading="lazy"><div><h3>Sid Peddinti</h3><div class="role">Legal Research and Workshops</div><p>Leads ROLA's nonprofit and foundation workshops for athletes.</p></div></div>
+        <div class="person"><img class="mono" src="/images/people/ladi-athlete-community.svg" width="96" height="96" alt="" loading="lazy"><div><h3>Ladi Saka</h3><div class="role">Athlete Community and Impact Lead</div><p>Represents the athlete voice and connects athletes with ROLA's executive team.</p></div></div>
       </div>
     </div>
   </section>
